@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141A22">
+<title>Rumbo</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141A22;
+  --sup:#1D242E;
+  --sup2:#28323F;
+  --linea:#333F4F;
+  --txt:#E9EBE7;
+  --tenue:#8B97A7;
+  --verde:#55A97C;
+  --ambar:#D9924A;
+  --violeta:#8B7BB8;
+  --rojo:#C4635C;
+  --r:14px;
+  --sombra:0 1px 0 rgba(255,255,255,.04) inset;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--txt);
+  font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.45;
+  padding-bottom:calc(88px + env(safe-area-inset-bottom));
+  overscroll-behavior-y:none;
+}
+h1,h2,h3{font-family:"Bricolage Grotesque","Public Sans",sans-serif;font-weight:700;margin:0;letter-spacing:-.02em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit;font-size:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px;color:var(--txt);background:var(--sup2);border:1px solid var(--linea);border-radius:10px;padding:12px 14px;width:100%}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--violeta);outline-offset:2px}
+label{display:block;font-size:13px;color:var(--tenue);margin:0 0 6px;font-weight:500}
+.campo{margin-bottom:14px}
+
+/* ---------- cabecera ---------- */
+header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:calc(14px + env(safe-area-inset-top)) 18px 10px;
+}
+.marca{display:flex;align-items:baseline;gap:8px}
+.marca h1{font-size:21px}
+.marca span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tenue)}
+.iconbtn{width:38px;height:38px;border-radius:11px;background:var(--sup);display:grid;place-items:center;font-size:17px}
+
+main{padding:0 18px}
+.vista{display:none}
+.vista.on{display:block;animation:sube .22s ease both}
+@keyframes sube{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.tarjeta{background:var(--sup);border:1px solid var(--linea);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--sombra)}
+.rotulo{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tenue);font-weight:600;margin-bottom:10px}
+
+/* ---------- firma: tira de la quincena ---------- */
+.tira{display:flex;align-items:flex-end;gap:4px;height:66px;margin:4px 0 12px}
+.dia{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%;position:relative}
+.marca-dia{width:100%;border-radius:3px;background:var(--sup2);min-height:3px;transition:height .3s ease}
+.dia.futuro .marca-dia{background:#222B36}
+.dia.bien .marca-dia{background:var(--verde)}
+.dia.pasado .marca-dia{background:var(--ambar)}
+.dia.hoy::after{content:"";position:absolute;bottom:-7px;width:5px;height:5px;border-radius:50%;background:var(--txt)}
+.dia small{font-size:9px;color:#5C6675;font-family:"IBM Plex Mono",monospace}
+.tope{position:absolute;left:0;right:0;border-top:1px dashed var(--linea);opacity:.7}
+
+.cifra{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(38px,12vw,52px);line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.cifra.neg{color:var(--rojo)}
+.sub{font-size:13px;color:var(--tenue);margin-top:8px}
+
+/* ---------- sobres ---------- */
+.sobres{display:flex;height:11px;border-radius:6px;overflow:hidden;background:var(--sup2);margin:14px 0 10px}
+.sobres i{display:block;height:100%}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--tenue)}
+.leyenda b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+/* ---------- listas ---------- */
+.fila{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--linea)}
+.fila:last-child{border-bottom:0}
+.fila .cuerpo{flex:1;min-width:0}
+.fila .tit{font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fila .pie{font-size:12px;color:var(--tenue);margin-top:2px}
+.fila .val{font-family:"IBM Plex Mono",monospace;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip{display:inline-block;font-size:11px;padding:3px 8px;border-radius:99px;background:var(--sup2);color:var(--tenue);font-weight:500}
+.chip.urg{background:rgba(217,146,74,.16);color:var(--ambar)}
+.chip.ven{background:rgba(196,99,92,.16);color:var(--rojo)}
+.chip.ok{background:rgba(85,169,124,.16);color:var(--verde)}
+.vacio{color:var(--tenue);font-size:14px;padding:18px 0;text-align:center;line-height:1.6}
+
+/* ---------- barras ---------- */
+.barra{height:9px;border-radius:5px;background:var(--sup2);overflow:hidden;margin-top:7px}
+.barra i{display:block;height:100%;border-radius:5px}
+
+/* ---------- navegación ---------- */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  background:rgba(20,26,34,.94);backdrop-filter:blur(14px);
+  border-top:1px solid var(--linea);
+  padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+}
+nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:10.5px;color:var(--tenue);letter-spacing:.02em}
+nav button em{font-style:normal;font-size:19px;line-height:1;opacity:.75}
+nav button.on{color:var(--txt)}
+nav button.on em{opacity:1}
+.fab{
+  position:fixed;right:18px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:41;
+  width:58px;height:58px;border-radius:20px;background:var(--verde);color:#0E1620;
+  font-size:30px;font-weight:700;display:grid;place-items:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.45);
+}
+
+/* ---------- hojas ---------- */
+.velo{position:fixed;inset:0;background:rgba(8,11,15,.72);z-index:50;display:none}
+.velo.on{display:block}
+.hoja{
+  position:fixed;left:0;right:0;bottom:0;z-index:51;
+  background:var(--sup);border-radius:20px 20px 0 0;border-top:1px solid var(--linea);
+  padding:8px 18px calc(24px + env(safe-area-inset-bottom));
+  max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.3,1);
+}
+.hoja.on{transform:none}
+.asa{width:38px;height:4px;border-radius:2px;background:var(--linea);margin:6px auto 14px}
+.hoja h2{font-size:19px;margin-bottom:14px}
+.acciones{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;padding:15px;border-radius:12px;background:var(--verde);color:#0E1620;font-weight:600;text-align:center}
+.btn.sec{background:var(--sup2);color:var(--txt)}
+.btn.vio{background:var(--violeta);color:#0E1620}
+.btn.peq{padding:11px;font-size:14px}
+
+.opciones{display:flex;flex-wrap:wrap;gap:8px}
+.opciones button{padding:9px 13px;border-radius:10px;background:var(--sup2);border:1px solid var(--linea);font-size:14px}
+.opciones button.on{background:var(--verde);color:#0E1620;border-color:var(--verde);font-weight:600}
+.opciones.vio button.on{background:var(--violeta);color:#0E1620;border-color:var(--violeta)}
+
+.animos{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.animos button{padding:12px 4px;border-radius:12px;background:var(--sup2);border:1px solid var(--linea);text-align:center;font-size:11px;color:var(--tenue);line-height:1.3}
+.animos button b{display:block;font-size:24px;font-weight:400;margin-bottom:4px}
+.animos button.on{border-color:var(--violeta);background:rgba(139,123,184,.15);color:var(--txt)}
+
+.pregunta{padding:14px 0;border-bottom:1px solid var(--linea);font-size:15px;line-height:1.55}
+.pregunta:last-of-type{border-bottom:0}
+.pregunta span{color:var(--violeta);font-family:"IBM Plex Mono",monospace;font-size:12px;margin-right:9px}
+
+.aviso{font-size:12.5px;color:var(--tenue);line-height:1.6;border-left:2px solid var(--linea);padding-left:12px;margin-top:6px}
+.auxilio{display:block;width:100%;text-align:left;padding:14px;border-radius:12px;background:rgba(139,123,184,.13);border:1px solid rgba(139,123,184,.3);color:var(--txt);font-size:14px;margin-top:14px;text-decoration:none}
+.auxilio small{display:block;color:var(--tenue);font-size:12px;margin-top:3px}
+.tel{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--linea);color:var(--txt);text-decoration:none}
+.tel:last-of-type{border-bottom:0}
+.tel .num{font-family:"IBM Plex Mono",monospace;font-size:20px;font-weight:500;color:var(--violeta)}
+.tel small{display:block;color:var(--tenue);font-size:12px;margin-top:2px}
+
+.aviso-flotante{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translate(-50%,14px);z-index:60;background:var(--sup2);border:1px solid var(--linea);color:var(--txt);padding:11px 18px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.22s}
+.aviso-flotante.on{opacity:1;transform:translate(-50%,0)}
+
+.borrar{color:var(--rojo);font-size:19px;padding:6px 4px;line-height:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="marca">
+    <h1>Rumbo</h1>
+    <span id="rotuloQ">quincena</span>
+  </div>
+  <button class="iconbtn" id="btnAjustes" aria-label="Ajustes">⚙</button>
+</header>
+
+<main>
+
+<!-- ============ HOY ============ -->
+<section class="vista on" id="v-hoy">
+  <div class="tarjeta">
+    <div class="rotulo">Puedes gastar hoy</div>
+    <div class="cifra mono" id="hoyCifra">$0</div>
+    <div class="sub" id="hoySub">Registra tu quincena para empezar.</div>
+
+    <div class="sobres" id="sobresBarra"></div>
+    <div class="leyenda" id="sobresLeyenda"></div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="rotulo">Cómo va la quincena</div>
+    <div class="tira" id="tira"></div>
+    <div class="sub" id="tiraPie">Cada marca es un día. La línea punteada es tu tope diario.</div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="rotulo">Últimos gastos</div>
+    <div id="listaGastos"></div>
+  </div>
+</section>
+
+<!-- ============ COMPROMISOS ============ -->
+<section class="vista" id="v-comp">
+  <div class="tarjeta">
+    <div class="rotulo">Lo que debes pagar</div>
+    <div id="listaFijos"></div>
+    <div class="acciones"><button class="btn sec peq" id="btnNuevoFijo">+ Agregar pago fijo</button></div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="rotulo">A quién le debes</div>
+    <div id="listaDeudas"></div>
+    <div class="acciones"><button class="btn sec peq" id="btnNuevaDeuda">+ Agregar deuda</button></div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="rotulo">Meta de ahorro</div>
+    <div id="listaMetas"></div>
+    <div class="acciones"><button class="btn sec peq" id="btnNuevaMeta">+ Agregar meta</button></div>
+  </div>
+</section>
+
+<!-- ============ PATRONES ============ -->
+<section class="vista" id="v-pat">
+  <div class="tarjeta">
+    <div class="rotulo">En qué se te va</div>
+    <div id="porCategoria"></div>
+  </div>
+  <div class="tarjeta">
+    <div class="rotulo">Por qué gastas</div>
+    <div id="porMotivo"></div>
+  </div>
+  <div class="tarjeta">
+    <div class="rotulo">Ánimo y gasto</div>
+    <div id="cruceAnimo"></div>
+  </div>
+  <div class="tarjeta">
+    <div class="rotulo">Resumen de la quincena</div>
+    <div id="resumen"></div>
+  </div>
+</section>
+
+<!-- ============ MENTE ============ -->
+<section class="vista" id="v-mente">
+  <div class="tarjeta">
+    <div class="rotulo">¿Cómo vas hoy?</div>
+    <div class="animos" id="animosHoy"></div>
+    <div class="acciones"><button class="btn vio peq" id="btnCheckin">Guardar el día</button></div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="rotulo">Ponerle nombre a lo que pesa</div>
+    <p class="sub" style="margin-top:0">Escoge el área. No te doy respuestas: te doy las preguntas que casi nadie se hace.</p>
+    <div class="opciones vio" id="areasLista"></div>
+    <div id="preguntasArea"></div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="rotulo">Tus notas</div>
+    <div id="listaNotas"></div>
+    <div class="acciones"><button class="btn sec peq" id="btnNuevaNota">+ Escribir</button></div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="rotulo">Antes de seguir</div>
+    <p class="aviso">Esta app no es un psicólogo y no pretende serlo. Sirve para ordenar lo que tienes en la cabeza y ver patrones con el tiempo. Si lo que cargas es más grande que eso, hablar con un profesional no es debilidad: es la misma lógica de llamar a un técnico cuando el equipo no arranca.</p>
+    <button class="auxilio" id="btnAyuda">
+      Hablar con alguien ahora
+      <small>Líneas gratuitas y confidenciales en Colombia · 24/7</small>
+    </button>
+  </div>
+</section>
+
+</main>
+
+<button class="fab" id="fab" aria-label="Registrar gasto">+</button>
+
+<nav>
+  <button data-v="hoy" class="on"><em>◧</em>Hoy</button>
+  <button data-v="comp"><em>◷</em>Compromisos</button>
+  <button data-v="pat"><em>◔</em>Patrones</button>
+  <button data-v="mente"><em>◑</em>Mente</button>
+</nav>
+
+<div class="velo" id="velo"></div>
+
+<!-- hoja: gasto -->
+<div class="hoja" id="h-gasto">
+  <div class="asa"></div>
+  <h2>Registrar gasto</h2>
+  <div class="campo">
+    <label for="gMonto">Cuánto</label>
+    <input id="gMonto" inputmode="numeric" placeholder="0" class="mono" style="font-size:26px;padding:14px">
+  </div>
+  <div class="campo">
+    <label>En qué</label>
+    <div class="opciones" id="gCats"></div>
+  </div>
+  <div class="campo">
+    <label>Por qué (opcional, pero es el dato que más vale)</label>
+    <div class="opciones vio" id="gMotivos"></div>
+  </div>
+  <div class="campo">
+    <label for="gNota">Nota (opcional)</label>
+    <input id="gNota" placeholder="Ej: almuerzo, pasaje, recarga">
+  </div>
+  <div class="acciones">
+    <button class="btn sec" data-cerrar>Cancelar</button>
+    <button class="btn" id="gGuardar">Guardar</button>
+  </div>
+</div>
+
+<!-- hoja: ajustes -->
+<div class="hoja" id="h-ajustes">
+  <div class="asa"></div>
+  <h2>Tu quincena</h2>
+  <div class="campo">
+    <label for="aIngreso">Lo que recibes por quincena</label>
+    <input id="aIngreso" inputmode="numeric" class="mono" placeholder="0">
+  </div>
+  <div class="grid2">
+    <div class="campo">
+      <label for="aInicio">Día que cobras</label>
+      <input id="aInicio" type="date">
+    </div>
+    <div class="campo">
+      <label for="aDias">Días que dura</label>
+      <input id="aDias" type="number" min="1" max="31" value="15">
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="campo">
+      <label for="aDeuda">Abono a deudas</label>
+      <input id="aDeuda" inputmode="numeric" class="mono" placeholder="0">
+    </div>
+    <div class="campo">
+      <label for="aMeta">Guardar para la meta</label>
+      <input id="aMeta" inputmode="numeric" class="mono" placeholder="0">
+    </div>
+  </div>
+  <p class="aviso">Los pagos fijos se descuentan solos: no necesitas apartarlos aquí. Lo que quede después de fijos, abono y meta es lo que la app reparte entre los días.</p>
+  <div class="acciones">
+    <button class="btn sec" data-cerrar>Cerrar</button>
+    <button class="btn" id="aGuardar">Guardar</button>
+  </div>
+  <div class="acciones">
+    <button class="btn sec peq" id="aExportar">Exportar copia</button>
+    <button class="btn sec peq" id="aImportar">Restaurar copia</button>
+  </div>
+  <input type="file" id="aArchivo" accept="application/json" style="display:none">
+</div>
+
+<!-- hoja: fijo -->
+<div class="hoja" id="h-fijo">
+  <div class="asa"></div>
+  <h2>Pago fijo</h2>
+  <div class="campo"><label for="fNombre">Qué es</label><input id="fNombre" placeholder="Arriendo, luz, internet, datos…"></div>
+  <div class="grid2">
+    <div class="campo"><label for="fMonto">Cuánto</label><input id="fMonto" inputmode="numeric" class="mono" placeholder="0"></div>
+    <div class="campo"><label for="fDia">Día del mes</label><input id="fDia" type="number" min="1" max="31" placeholder="5"></div>
+  </div>
+  <div class="acciones">
+    <button class="btn sec" data-cerrar>Cancelar</button>
+    <button class="btn" id="fGuardar">Guardar</button>
+  </div>
+</div>
+
+<!-- hoja: deuda -->
+<div class="hoja" id="h-deuda">
+  <div class="asa"></div>
+  <h2>Deuda</h2>
+  <div class="campo"><label for="dQuien">A quién</label><input id="dQuien" placeholder="Nombre o entidad"></div>
+  <div class="grid2">
+    <div class="campo"><label for="dTotal">Total que debes</label><input id="dTotal" inputmode="numeric" class="mono" placeholder="0"></div>
+    <div class="campo"><label for="dLimite">Fecha límite</label><input id="dLimite" type="date"></div>
+  </div>
+  <div class="campo">
+    <label>Cómo te hace sentir</label>
+    <div class="opciones vio" id="dPesos"></div>
+  </div>
+  <div class="acciones">
+    <button class="btn sec" data-cerrar>Cancelar</button>
+    <button class="btn" id="dGuardar">Guardar</button>
+  </div>
+</div>
+
+<!-- hoja: abono -->
+<div class="hoja" id="h-abono">
+  <div class="asa"></div>
+  <h2 id="abTitulo">Abonar</h2>
+  <div class="campo"><label for="abMonto">Cuánto abonas</label><input id="abMonto" inputmode="numeric" class="mono" placeholder="0" style="font-size:24px;padding:14px"></div>
+  <div class="acciones">
+    <button class="btn sec" data-cerrar>Cancelar</button>
+    <button class="btn" id="abGuardar">Registrar abono</button>
+  </div>
+</div>
+
+<!-- hoja: meta -->
+<div class="hoja" id="h-meta">
+  <div class="asa"></div>
+  <h2>Meta de ahorro</h2>
+  <div class="campo"><label for="mNombre">Qué quieres</label><input id="mNombre" placeholder="Portátil de segunda"></div>
+  <div class="campo"><label for="mObjetivo">Cuánto cuesta</label><input id="mObjetivo" inputmode="numeric" class="mono" placeholder="0"></div>
+  <div class="acciones">
+    <button class="btn sec" data-cerrar>Cancelar</button>
+    <button class="btn" id="mGuardar">Guardar</button>
+  </div>
+</div>
+
+<!-- hoja: nota -->
+<div class="hoja" id="h-nota">
+  <div class="asa"></div>
+  <h2>Escribir</h2>
+  <div class="campo">
+    <label>Sobre qué</label>
+    <div class="opciones vio" id="nAreas"></div>
+  </div>
+  <div class="campo">
+    <label for="nTexto">Suéltalo aquí</label>
+    <textarea id="nTexto" rows="7" placeholder="Nadie más lo va a leer. No sale de este teléfono."></textarea>
+  </div>
+  <div class="acciones">
+    <button class="btn sec" data-cerrar>Cancelar</button>
+    <button class="btn vio" id="nGuardar">Guardar</button>
+  </div>
+</div>
+
+<!-- hoja: ayuda -->
+<div class="hoja" id="h-ayuda">
+  <div class="asa"></div>
+  <h2>Hablar con alguien</h2>
+  <p class="aviso" style="margin-bottom:14px">Son gratuitas, confidenciales y atienden profesionales de salud mental. No hay que estar en una emergencia para llamar.</p>
+  <a class="tel" href="tel:106">
+    <div><b>Línea 106</b><small>Orientación en salud mental · 24 horas · todo el país</small></div>
+    <div class="num">106</div>
+  </a>
+  <a class="tel" href="tel:192">
+    <div><b>Línea 192, opción 4</b><small>Salud mental del Ministerio de Salud</small></div>
+    <div class="num">192</div>
+  </a>
+  <a class="tel" href="tel:018000423614">
+    <div><b>Línea Calma</b><small>Para hombres con rabia, celos o presión difícil de manejar</small></div>
+    <div class="num">01 8000 423 614</div>
+  </a>
+  <div class="acciones"><button class="btn sec" data-cerrar>Cerrar</button></div>
+</div>
+
+<div class="aviso-flotante" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= estado ================= */
+var KEY = "rumbo.v1";
+var S = {
+  cfg:{ ingreso:0, inicio:hoyISO(), dias:15, deudaPlan:0, metaPlan:0 },
+  fijos:[], deudas:[], metas:[], gastos:[], checkins:[], notas:[]
+};
+
+var CATS = ["Comida","Transporte","Servicios","Datos","Salud","Familia","Herramientas","Antojos","Otros"];
+var MOTIVOS = [
+  {k:"necesidad", t:"Tocaba"},
+  {k:"ocasion",   t:"Se dio la ocasión"},
+  {k:"mal",       t:"Andaba mal"},
+  {k:"quedar",    t:"Por quedar bien"},
+  {k:"merecia",   t:"Me lo merecía"}
+];
+var PESOS = [
+  {v:1, t:"Tranquila"},
+  {v:2, t:"Incómoda"},
+  {v:3, t:"Me quita el sueño"}
+];
+var ANIMOS = [
+  {v:1, e:"😖", t:"Muy mal"},
+  {v:2, e:"😔", t:"Bajo"},
+  {v:3, e:"😐", t:"Normal"},
+  {v:4, e:"🙂", t:"Bien"},
+  {v:5, e:"😄", t:"Muy bien"}
+];
+var AREAS = {
+  "Dinero":[
+    "¿Qué parte de esto depende de una decisión tuya y qué parte no depende de ti?",
+    "Si esto no se resuelve este mes, ¿qué es lo mínimo que sí puedes mover esta semana?",
+    "¿Estás midiendo tu valor por lo que tienes en el bolsillo hoy?",
+    "¿Cuál gasto de la última quincena volverías a hacer, y cuál no?"
+  ],
+  "Familia":[
+    "¿Cuándo fue la última vez que hablaste con ellos de algo que no fuera plata?",
+    "¿Qué extrañas exactamente: un momento, una rutina, o la idea de estar ahí?",
+    "¿Qué cosa pequeña puedes hacer hoy que ellos noten mañana?",
+    "¿Estar lejos es un castigo o es el precio de algo que decidiste?"
+  ],
+  "Pareja":[
+    "¿Qué quieres que pase, y se lo has dicho con esas palabras?",
+    "¿Estás peleando por el tema o por algo viejo que nunca se cerró?",
+    "Si mañana se arregla, ¿qué tendría que ser distinto en ti?"
+  ],
+  "Trabajo":[
+    "¿Estás cansado del trabajo o de lo que el trabajo te impide hacer?",
+    "¿Qué habilidad te sacaría de aquí, y cuánto tiempo real le das a la semana?",
+    "¿Qué estás aguantando porque crees que no hay otra opción?"
+  ],
+  "Autoestima":[
+    "Eso que te acabas de decir, ¿se lo dirías a un amigo en tu misma situación?",
+    "¿De quién es esa voz? ¿Suena a alguien que conoces?",
+    "Nombra tres cosas que sabes hacer que la mayoría no sabe."
+  ],
+  "Rencor":[
+    "¿Qué te costaría soltar esto? ¿Y qué te está costando sostenerlo?",
+    "Si esa persona nunca pide perdón, ¿cómo se ve tu vida dentro de un año?",
+    "¿A quién estás castigando de verdad con esa rabia?"
+  ],
+  "Soledad":[
+    "¿Cuántas personas podrías llamar hoy sin excusa? Escribe los nombres.",
+    "¿Estás solo o estás rodeado de gente con la que no puedes hablar?",
+    "¿Qué te frena de escribirle primero a alguien?"
+  ],
+  "Oportunidades":[
+    "¿Qué puerta tocaste esta semana? Si ninguna, ¿por qué no?",
+    "¿Estás esperando que llegue algo o estás construyendo algo?",
+    "¿Qué harías distinto si supieras que nadie te va a rescatar?"
+  ]
+};
+
+/* ================= utilidades ================= */
+function $(s,c){ return (c||document).querySelector(s); }
+function $$(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); }
+function hoyISO(){ var d=new Date(); return iso(d); }
+function iso(d){ return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); }
+function p2(n){ return n<10?"0"+n:""+n; }
+function fecha(s){ var a=s.split("-"); return new Date(+a[0],+a[1]-1,+a[2]); }
+function sumaDias(s,n){ var d=fecha(s); d.setDate(d.getDate()+n); return iso(d); }
+function difDias(a,b){ return Math.round((fecha(b)-fecha(a))/86400000); }
+function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+var COP = new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0});
+function $$$(n){ return COP.format(Math.round(n||0)).replace(/\s/g,"\u00A0"); }
+function miles(n){ return new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0); }
+function num(el){ return parseInt(String(el.value).replace(/\D/g,""),10)||0; }
+function esc(t){ var d=document.createElement("div"); d.textContent=t==null?"":t; return d.innerHTML; }
+function toast(t){ var e=$("#toast"); e.textContent=t; e.classList.add("on"); clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove("on");},2100); }
+
+function guardar(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ toast("No se pudo guardar en este navegador"); } }
+function cargar(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(!raw) return;
+    var d = JSON.parse(raw);
+    if(d && typeof d === "object"){
+      S.cfg = Object.assign(S.cfg, d.cfg||{});
+      ["fijos","deudas","metas","gastos","checkins","notas"].forEach(function(k){
+        if(Array.isArray(d[k])) S[k]=d[k];
+      });
+    }
+  }catch(e){ toast("La copia guardada está dañada; empiezo de cero"); }
+}
+
+/* formateo de miles mientras se escribe */
+function vincularMiles(el){
+  el.addEventListener("input", function(){
+    var v = String(el.value).replace(/\D/g,"");
+    el.value = v ? miles(parseInt(v,10)) : "";
+  });
+}
+
+/* ================= quincena ================= */
+function quincena(){
+  var dias = Math.max(1, parseInt(S.cfg.dias,10)||15);
+  var ini = S.cfg.inicio || hoyISO();
+  var hoy = hoyISO();
+  var d = difDias(ini, hoy);
+  if(d >= 0){ ini = sumaDias(ini, Math.floor(d/dias)*dias); }
+  else { ini = sumaDias(ini, -Math.ceil(Math.abs(d)/dias)*dias); }
+  var fin = sumaDias(ini, dias-1);
+  return { ini:ini, fin:fin, dias:dias, idx:Math.max(0,Math.min(dias-1, difDias(ini,hoy))), restan:Math.max(1, difDias(hoy,fin)+1) };
+}
+function enRango(f,a,b){ return f>=a && f<=b; }
+
+function fijosPendientes(q){
+  var t=0;
+  S.fijos.forEach(function(f){
+    if((f.pagos||[]).indexOf(q.ini)>=0) return;
+    t += f.monto||0;
+  });
+  return t;
+}
+function calculo(){
+  var q = quincena();
+  var ingreso = S.cfg.ingreso||0;
+  var fijos = fijosPendientes(q);
+  var deuda = S.cfg.deudaPlan||0;
+  var meta  = S.cfg.metaPlan||0;
+  var bolsa = ingreso - fijos - deuda - meta;
+  var gastado = 0;
+  S.gastos.forEach(function(g){ if(enRango(g.fecha,q.ini,q.fin)) gastado += g.monto||0; });
+  var queda = bolsa - gastado;
+  return {
+    q:q, ingreso:ingreso, fijos:fijos, deuda:deuda, meta:meta,
+    bolsa:bolsa, gastado:gastado, queda:queda,
+    hoyPuede: queda / q.restan,
+    tope: q.dias>0 ? bolsa/q.dias : 0
+  };
+}
+
+/* ================= render ================= */
+function pintar(){ pintarHoy(); pintarComp(); pintarPatrones(); pintarMente(); }
+
+function pintarHoy(){
+  var c = calculo();
+  $("#rotuloQ").textContent = "día " + (c.q.idx+1) + " de " + c.q.dias;
+
+  var cif = $("#hoyCifra");
+  cif.textContent = $$$(Math.max(0,c.hoyPuede));
+  cif.classList.toggle("neg", c.queda < 0);
+
+  if(!c.ingreso){
+    $("#hoySub").innerHTML = "Toca el engranaje y pon lo que recibes por quincena. Sin ese dato no puedo calcular nada.";
+  } else if(c.queda < 0){
+    $("#hoySub").innerHTML = "Vas <b>"+$$$(Math.abs(c.queda))+"</b> por encima de lo que tenías para estos días. Quedan "+c.q.restan+" día(s).";
+  } else {
+    $("#hoySub").innerHTML = "Te quedan <b>"+$$$(c.queda)+"</b> repartidos en "+c.q.restan+" día(s). Tope diario planeado: "+$$$(c.tope)+".";
+  }
+
+  /* sobres */
+  var partes = [
+    {n:"Fijos", v:c.fijos, col:"var(--ambar)"},
+    {n:"Deudas", v:c.deuda, col:"var(--rojo)"},
+    {n:"Meta", v:c.meta, col:"var(--violeta)"},
+    {n:"Diario", v:Math.max(0,c.bolsa), col:"var(--verde)"}
+  ];
+  var tot = partes.reduce(function(a,b){return a+b.v;},0) || 1;
+  $("#sobresBarra").innerHTML = partes.map(function(p){
+    return '<i style="width:'+(p.v/tot*100)+'%;background:'+p.col+'"></i>';
+  }).join("");
+  $("#sobresLeyenda").innerHTML = partes.map(function(p){
+    return '<span><b style="background:'+p.col+'"></b>'+p.n+' '+$$$(p.v)+'</span>';
+  }).join("");
+
+  /* tira de la quincena */
+  var porDia = {};
+  S.gastos.forEach(function(g){ if(enRango(g.fecha,c.q.ini,c.q.fin)) porDia[g.fecha]=(porDia[g.fecha]||0)+(g.monto||0); });
+  var maxDia = Math.max(c.tope, 1);
+  Object.keys(porDia).forEach(function(k){ if(porDia[k]>maxDia) maxDia=porDia[k]; });
+  var hoy = hoyISO(), html = "";
+  for(var i=0;i<c.q.dias;i++){
+    var f = sumaDias(c.q.ini,i), v = porDia[f]||0;
+    var cls = f>hoy ? "futuro" : (v<=c.tope ? "bien" : "pasado");
+    if(f===hoy) cls += " hoy";
+    var h = Math.max(3, Math.round(v/maxDia*54));
+    html += '<div class="dia '+cls+'" title="'+f+'"><div class="marca-dia" style="height:'+h+'px"></div><small>'+f.slice(8)+'</small></div>';
+  }
+  var t = $("#tira"); t.innerHTML = html;
+  var topeY = Math.max(3, Math.round(c.tope/maxDia*54)) + 16;
+  t.insertAdjacentHTML("beforeend", '<div class="tope" style="bottom:'+topeY+'px"></div>');
+  t.style.position = "relative";
+
+  var dSobre = 0, dBajo = 0;
+  for(var j=0;j<=c.q.idx;j++){ var ff=sumaDias(c.q.ini,j); if((porDia[ff]||0)>c.tope) dSobre++; else dBajo++; }
+  $("#tiraPie").textContent = c.ingreso
+    ? dBajo+" día(s) dentro del tope, "+dSobre+" por encima. La línea punteada es tu tope diario."
+    : "Cada marca es un día. La línea punteada es tu tope diario.";
+
+  /* últimos gastos */
+  var ult = S.gastos.slice().sort(function(a,b){ return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(b.t||0)-(a.t||0); }).slice(0,8);
+  $("#listaGastos").innerHTML = ult.length ? ult.map(function(g){
+    return '<div class="fila"><div class="cuerpo"><div class="tit">'+esc(g.cat)+(g.nota?' · <span style="color:var(--tenue);font-weight:400">'+esc(g.nota)+'</span>':'')+'</div><div class="pie">'+g.fecha+'</div></div><div class="val">'+$$$(g.monto)+'</div><button class="borrar" data-delg="'+g.id+'" aria-label="Borrar">×</button></div>';
+  }).join("") : '<div class="vacio">Todavía no has anotado nada.<br>Toca el botón verde apenas gastes: mientras más rápido, más real es el número de arriba.</div>';
+}
+
+function pintarComp(){
+  var q = quincena(), hoy = hoyISO();
+
+  $("#listaFijos").innerHTML = S.fijos.length ? S.fijos.map(function(f){
+    var pagado = (f.pagos||[]).indexOf(q.ini)>=0;
+    var chip = pagado ? '<span class="chip ok">pagado</span>' : '<span class="chip">día '+(f.dia||"—")+'</span>';
+    return '<div class="fila"><div class="cuerpo"><div class="tit">'+esc(f.nombre)+'</div><div class="pie">'+chip+'</div></div><div class="val">'+$$$(f.monto)+'</div>'+
+      (pagado?'<button class="chip" data-desmarcar="'+f.id+'">deshacer</button>':'<button class="btn peq" style="flex:0 0 auto;padding:8px 12px" data-pagar="'+f.id+'">Pagar</button>')+
+      '<button class="borrar" data-delf="'+f.id+'" aria-label="Borrar">×</button></div>';
+  }).join("") : '<div class="vacio">Arriendo, luz, agua, internet, datos.<br>Ponlos aquí y dejan de sorprenderte.</div>';
+
+  var deudasOrd = S.deudas.slice().sort(function(a,b){ return (b.peso||1)-(a.peso||1); });
+  $("#listaDeudas").innerHTML = deudasOrd.length ? deudasOrd.map(function(d){
+    var ab = (d.abonos||[]).reduce(function(a,b){return a+(b.monto||0);},0);
+    var falta = Math.max(0,(d.total||0)-ab);
+    var pesoTxt = (PESOS.filter(function(p){return p.v===(d.peso||1);})[0]||{}).t;
+    var chip = (d.peso||1)>1 ? '<span class="chip urg">'+pesoTxt+'</span> ' : "";
+    if(d.limite){
+      var dd = difDias(hoy,d.limite);
+      chip += dd<0 ? '<span class="chip ven">vencida</span>' : dd<=3 ? '<span class="chip urg">faltan '+dd+' día(s)</span>' : '<span class="chip">'+d.limite+'</span>';
+    }
+    if(falta===0) chip = '<span class="chip ok">saldada</span>';
+    return '<div class="fila"><div class="cuerpo"><div class="tit">'+esc(d.quien)+'</div><div class="pie">'+chip+' abonado '+$$$(ab)+'</div><div class="barra"><i style="width:'+(d.total?Math.min(100,ab/d.total*100):0)+'%;background:var(--verde)"></i></div></div><div class="val">'+$$$(falta)+'</div><button class="btn peq" style="flex:0 0 auto;padding:8px 12px" data-abonar="'+d.id+'">Abonar</button><button class="borrar" data-deld="'+d.id+'" aria-label="Borrar">×</button></div>';
+  }).join("") : '<div class="vacio">Si le debes a alguien, ponlo aquí.<br>Una deuda que no está escrita crece en la cabeza más que en el bolsillo.</div>';
+
+  $("#listaMetas").innerHTML = S.metas.length ? S.metas.map(function(m){
+    var pct = m.objetivo ? Math.min(100,(m.ahorrado||0)/m.objetivo*100) : 0;
+    var falta = Math.max(0,(m.objetivo||0)-(m.ahorrado||0));
+    var pQ = S.cfg.metaPlan||0;
+    var quincenas = pQ>0 ? Math.ceil(falta/pQ) : null;
+    var pie = quincenas===null
+      ? "Define cuánto guardas por quincena en ajustes."
+      : (falta===0 ? "Ya la alcanzaste." : "A este ritmo: "+quincenas+" quincena(s) más.");
+    return '<div class="fila"><div class="cuerpo"><div class="tit">'+esc(m.nombre)+'</div><div class="pie">'+pie+'</div><div class="barra"><i style="width:'+pct+'%;background:var(--violeta)"></i></div></div><div class="val">'+$$$(m.ahorrado||0)+'<br><span style="color:var(--tenue);font-size:11px">de '+$$$(m.objetivo)+'</span></div><button class="btn peq" style="flex:0 0 auto;padding:8px 12px" data-guardar-meta="'+m.id+'">Guardar</button><button class="borrar" data-delm="'+m.id+'" aria-label="Borrar">×</button></div>';
+  }).join("") : '<div class="vacio">Una meta concreta con precio y fecha se defiende mejor que "ahorrar".</div>';
+}
+
+function pintarPatrones(){
+  var c = calculo(), q = c.q;
+  var porCat = {};
+  S.gastos.forEach(function(g){ if(enRango(g.fecha,q.ini,q.fin)) porCat[g.cat]=(porCat[g.cat]||0)+(g.monto||0); });
+  var arr = Object.keys(porCat).map(function(k){return {k:k,v:porCat[k]};}).sort(function(a,b){return b.v-a.v;});
+  var max = arr.length?arr[0].v:1;
+  $("#porCategoria").innerHTML = arr.length ? arr.map(function(x){
+    var pct = c.gastado? (x.v/c.gastado*100):0;
+    return '<div style="padding:9px 0"><div style="display:flex;justify-content:space-between;font-size:14px"><span>'+esc(x.k)+'</span><span class="mono">'+$$$(x.v)+' · '+pct.toFixed(0)+'%</span></div><div class="barra"><i style="width:'+(x.v/max*100)+'%;background:var(--ambar)"></i></div></div>';
+  }).join("") : '<div class="vacio">Sin gastos en esta quincena todavía.</div>';
+
+  /* por qué gastas */
+  var porMot = {}, conMot = 0;
+  S.gastos.forEach(function(g){
+    if(!enRango(g.fecha,q.ini,q.fin) || !g.motivo) return;
+    porMot[g.motivo] = (porMot[g.motivo]||0) + (g.monto||0);
+    conMot += g.monto||0;
+  });
+  if(!conMot){
+    $("#porMotivo").innerHTML = '<div class="vacio">Cuando anotes un gasto, marca el "por qué".<br>Es un toque más y es el único dato que te dice si el problema es de plata o es de otra cosa.</div>';
+  } else {
+    var mm = Math.max.apply(null, MOTIVOS.map(function(m){return porMot[m.k]||0;})) || 1;
+    var noNecesidad = conMot - (porMot.necesidad||0);
+    $("#porMotivo").innerHTML = MOTIVOS.filter(function(m){return porMot[m.k];}).map(function(m){
+      var v = porMot[m.k];
+      var col = m.k==="necesidad" ? "var(--tenue)" : "var(--violeta)";
+      return '<div style="padding:9px 0"><div style="display:flex;justify-content:space-between;font-size:14px"><span>'+m.t+'</span><span class="mono">'+$$$(v)+' · '+(v/conMot*100).toFixed(0)+'%</span></div><div class="barra"><i style="width:'+(v/mm*100)+'%;background:'+col+'"></i></div></div>';
+    }).join("") +
+    '<p class="aviso" style="margin-top:12px">'+$$$(noNecesidad)+' de lo que marcaste no fue por necesidad. No es un regaño: es plata que respondió a un estado, no a una factura. Ahí es donde de verdad se puede mover algo.</p>';
+  }
+
+  /* cruce ánimo vs gasto */
+  var mapa = {};
+  S.checkins.forEach(function(ch){ if(enRango(ch.fecha,q.ini,q.fin)) mapa[ch.fecha]=ch.animo; });
+  var dias = Object.keys(mapa);
+  if(dias.length < 3){
+    $("#cruceAnimo").innerHTML = '<div class="vacio">Faltan días marcados.<br>Marca tu ánimo en la pestaña Mente unos '+(3-dias.length)+' día(s) más y aquí te muestro si tu estado de ánimo mueve tu gasto. No me lo voy a inventar antes.</div>';
+  } else {
+    var g = {}; S.gastos.forEach(function(x){ if(mapa[x.fecha]) g[x.fecha]=(g[x.fecha]||0)+(x.monto||0); });
+    var grupos = {bajo:[],medio:[],alto:[]};
+    dias.forEach(function(f){
+      var a = mapa[f], v = g[f]||0;
+      if(a<=2) grupos.bajo.push(v); else if(a===3) grupos.medio.push(v); else grupos.alto.push(v);
+    });
+    function prom(a){ return a.length ? a.reduce(function(x,y){return x+y;},0)/a.length : null; }
+    var etiquetas = [["Días bajos","bajo","var(--rojo)"],["Días normales","medio","var(--tenue)"],["Días buenos","alto","var(--verde)"]];
+    var vals = etiquetas.map(function(e){ return prom(grupos[e[1]]); });
+    var mx = Math.max.apply(null, vals.map(function(v){return v||0;})) || 1;
+    var html = etiquetas.map(function(e,i){
+      if(vals[i]===null) return '<div style="padding:9px 0;font-size:14px;color:var(--tenue)">'+e[0]+' — sin datos aún</div>';
+      return '<div style="padding:9px 0"><div style="display:flex;justify-content:space-between;font-size:14px"><span>'+e[0]+' ('+grupos[e[1]].length+')</span><span class="mono">'+$$$(vals[i])+'/día</span></div><div class="barra"><i style="width:'+(vals[i]/mx*100)+'%;background:'+e[2]+'"></i></div></div>';
+    }).join("");
+    var b = prom(grupos.bajo), a = prom(grupos.alto);
+    if(b!==null && a!==null && a>0){
+      var dif = (b-a)/a*100;
+      if(Math.abs(dif) >= 15){
+        html += '<p class="aviso" style="margin-top:12px">En esta quincena gastaste '+Math.abs(dif).toFixed(0)+'% '+(dif>0?"más":"menos")+' los días que te sentiste bajo. Son pocos datos todavía, pero vale la pena mirarlo.</p>';
+      } else {
+        html += '<p class="aviso" style="margin-top:12px">Por ahora tu gasto no cambia mucho según el ánimo. Sigue marcando: con más días se ve mejor.</p>';
+      }
+    }
+    $("#cruceAnimo").innerHTML = html;
+  }
+
+  $("#resumen").innerHTML =
+    fila2("Recibiste", $$$(c.ingreso)) +
+    fila2("Pagos fijos pendientes", $$$(c.fijos)) +
+    fila2("Apartado a deudas", $$$(c.deuda)) +
+    fila2("Apartado a la meta", $$$(c.meta)) +
+    fila2("Gastado del diario", $$$(c.gastado)) +
+    fila2("<b>Queda para "+c.q.restan+" día(s)</b>", '<b>'+$$$(c.queda)+'</b>');
+}
+function fila2(a,b){ return '<div class="fila"><div class="cuerpo"><div class="tit" style="font-weight:400;font-size:14px">'+a+'</div></div><div class="val">'+b+'</div></div>'; }
+
+var animoSel = null, areaSel = null, areaNota = null;
+function pintarMente(){
+  var hoy = hoyISO();
+  var ch = S.checkins.filter(function(x){return x.fecha===hoy;})[0];
+  if(ch && animoSel===null) animoSel = ch.animo;
+  $("#animosHoy").innerHTML = ANIMOS.map(function(a){
+    return '<button data-animo="'+a.v+'" class="'+(animoSel===a.v?"on":"")+'"><b>'+a.e+'</b>'+a.t+'</button>';
+  }).join("");
+
+  var claves = Object.keys(AREAS);
+  $("#areasLista").innerHTML = claves.map(function(k){
+    return '<button data-area="'+k+'" class="'+(areaSel===k?"on":"")+'">'+k+'</button>';
+  }).join("");
+  $("#preguntasArea").innerHTML = areaSel
+    ? AREAS[areaSel].map(function(p,i){ return '<div class="pregunta"><span>'+p2(i+1)+'</span>'+esc(p)+'</div>'; }).join("")
+    : '';
+
+  $("#nAreas").innerHTML = claves.map(function(k){
+    return '<button data-narea="'+k+'" class="'+(areaNota===k?"on":"")+'">'+k+'</button>';
+  }).join("");
+
+  var ns = S.notas.slice().sort(function(a,b){return a.fecha<b.fecha?1:-1;}).slice(0,6);
+  $("#listaNotas").innerHTML = ns.length ? ns.map(function(n){
+    return '<div class="fila"><div class="cuerpo"><div class="tit" style="font-weight:400">'+esc(n.texto.slice(0,90))+(n.texto.length>90?"…":"")+'</div><div class="pie"><span class="chip">'+esc(n.area||"—")+'</span> '+n.fecha+'</div></div><button class="borrar" data-deln="'+n.id+'" aria-label="Borrar">×</button></div>';
+  }).join("") : '<div class="vacio">Nada escrito todavía.<br>Escribir no arregla el problema, pero lo saca de la cabeza y lo pone donde puedes mirarlo.</div>';
+}
+
+/* ================= hojas ================= */
+var hojaActiva = null;
+function abrir(sel){
+  cerrar();
+  hojaActiva = $(sel);
+  $("#velo").classList.add("on");
+  hojaActiva.classList.add("on");
+}
+function cerrar(){
+  $("#velo").classList.remove("on");
+  $$(".hoja").forEach(function(h){h.classList.remove("on");});
+  hojaActiva = null;
+}
+$("#velo").addEventListener("click", cerrar);
+document.addEventListener("click", function(e){
+  if(e.target.closest("[data-cerrar]")) cerrar();
+});
+
+/* ================= navegación ================= */
+$$("nav button").forEach(function(b){
+  b.addEventListener("click", function(){
+    $$("nav button").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on");
+    $$(".vista").forEach(function(v){v.classList.remove("on");});
+    $("#v-"+b.dataset.v).classList.add("on");
+    window.scrollTo({top:0,behavior:"instant"});
+  });
+});
+
+/* ================= gasto ================= */
+var catSel = "Comida", motSel = null, pesoSel = 1;
+function pintarCats(){
+  $("#gCats").innerHTML = CATS.map(function(c){
+    return '<button data-cat="'+c+'" class="'+(catSel===c?"on":"")+'">'+c+'</button>';
+  }).join("");
+  $("#gMotivos").innerHTML = MOTIVOS.map(function(m){
+    return '<button data-mot="'+m.k+'" class="'+(motSel===m.k?"on":"")+'">'+m.t+'</button>';
+  }).join("");
+  $("#dPesos").innerHTML = PESOS.map(function(p){
+    return '<button data-peso="'+p.v+'" class="'+(pesoSel===p.v?"on":"")+'">'+p.t+'</button>';
+  }).join("");
+}
+$("#gCats").addEventListener("click", function(e){
+  var b = e.target.closest("[data-cat]"); if(!b) return;
+  catSel = b.dataset.cat; pintarCats();
+});
+$("#gMotivos").addEventListener("click", function(e){
+  var b = e.target.closest("[data-mot]"); if(!b) return;
+  motSel = (motSel===b.dataset.mot) ? null : b.dataset.mot; pintarCats();
+});
+$("#dPesos").addEventListener("click", function(e){
+  var b = e.target.closest("[data-peso]"); if(!b) return;
+  pesoSel = parseInt(b.dataset.peso,10); pintarCats();
+});
+$("#fab").addEventListener("click", function(){
+  $("#gMonto").value=""; $("#gNota").value=""; motSel=null; pintarCats();
+  abrir("#h-gasto"); setTimeout(function(){ $("#gMonto").focus(); },220);
+});
+$("#gGuardar").addEventListener("click", function(){
+  var m = num($("#gMonto"));
+  if(!m){ toast("Escribe cuánto gastaste"); return; }
+  var hoy = hoyISO();
+  var ch = S.checkins.filter(function(x){return x.fecha===hoy;})[0];
+  S.gastos.push({ id:id(), fecha:hoy, monto:m, cat:catSel, motivo:motSel, nota:$("#gNota").value.trim(), animo: ch?ch.animo:null, t:Date.now() });
+  guardar(); cerrar(); pintar(); toast("Anotado");
+});
+
+/* ================= ajustes ================= */
+$("#btnAjustes").addEventListener("click", function(){
+  $("#aIngreso").value = S.cfg.ingreso ? miles(S.cfg.ingreso) : "";
+  $("#aInicio").value = S.cfg.inicio;
+  $("#aDias").value = S.cfg.dias;
+  $("#aDeuda").value = S.cfg.deudaPlan ? miles(S.cfg.deudaPlan) : "";
+  $("#aMeta").value = S.cfg.metaPlan ? miles(S.cfg.metaPlan) : "";
+  abrir("#h-ajustes");
+});
+$("#aGuardar").addEventListener("click", function(){
+  S.cfg.ingreso = num($("#aIngreso"));
+  S.cfg.inicio = $("#aInicio").value || hoyISO();
+  S.cfg.dias = Math.max(1, parseInt($("#aDias").value,10)||15);
+  S.cfg.deudaPlan = num($("#aDeuda"));
+  S.cfg.metaPlan = num($("#aMeta"));
+  guardar(); cerrar(); pintar(); toast("Listo");
+});
+$("#aExportar").addEventListener("click", function(){
+  var b = new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = "rumbo-"+hoyISO()+".json";
+  a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+});
+$("#aImportar").addEventListener("click", function(){ $("#aArchivo").click(); });
+$("#aArchivo").addEventListener("change", function(e){
+  var f = e.target.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    try{
+      var d = JSON.parse(r.result);
+      S.cfg = Object.assign(S.cfg, d.cfg||{});
+      ["fijos","deudas","metas","gastos","checkins","notas"].forEach(function(k){ if(Array.isArray(d[k])) S[k]=d[k]; });
+      guardar(); cerrar(); pintar(); toast("Copia restaurada");
+    }catch(err){ toast("Ese archivo no es una copia de Rumbo"); }
+  };
+  r.readAsText(f);
+  e.target.value = "";
+});
+
+/* ================= compromisos ================= */
+$("#btnNuevoFijo").addEventListener("click", function(){
+  $("#fNombre").value=""; $("#fMonto").value=""; $("#fDia").value="";
+  abrir("#h-fijo");
+});
+$("#fGuardar").addEventListener("click", function(){
+  var n = $("#fNombre").value.trim(), m = num($("#fMonto"));
+  if(!n || !m){ toast("Falta el nombre o el monto"); return; }
+  S.fijos.push({ id:id(), nombre:n, monto:m, dia:parseInt($("#fDia").value,10)||null, pagos:[] });
+  guardar(); cerrar(); pintar(); toast("Agregado");
+});
+$("#btnNuevaDeuda").addEventListener("click", function(){
+  $("#dQuien").value=""; $("#dTotal").value=""; $("#dLimite").value=""; pesoSel=1; pintarCats();
+  abrir("#h-deuda");
+});
+$("#dGuardar").addEventListener("click", function(){
+  var q = $("#dQuien").value.trim(), t = num($("#dTotal"));
+  if(!q || !t){ toast("Falta a quién o cuánto"); return; }
+  S.deudas.push({ id:id(), quien:q, total:t, limite:$("#dLimite").value||null, peso:pesoSel, abonos:[] });
+  guardar(); cerrar(); pintar(); toast("Agregada");
+});
+$("#btnNuevaMeta").addEventListener("click", function(){
+  $("#mNombre").value=""; $("#mObjetivo").value="";
+  abrir("#h-meta");
+});
+$("#mGuardar").addEventListener("click", function(){
+  var n = $("#mNombre").value.trim(), o = num($("#mObjetivo"));
+  if(!n || !o){ toast("Falta el nombre o el precio"); return; }
+  S.metas.push({ id:id(), nombre:n, objetivo:o, ahorrado:0 });
+  guardar(); cerrar(); pintar(); toast("Meta creada");
+});
+
+var abonoDestino = null;
+$("#abGuardar").addEventListener("click", function(){
+  var m = num($("#abMonto"));
+  if(!m || !abonoDestino){ toast("Escribe cuánto"); return; }
+  if(abonoDestino.tipo === "deuda"){
+    var d = S.deudas.filter(function(x){return x.id===abonoDestino.id;})[0];
+    if(d){ d.abonos = d.abonos||[]; d.abonos.push({fecha:hoyISO(), monto:m}); }
+  } else {
+    var me = S.metas.filter(function(x){return x.id===abonoDestino.id;})[0];
+    if(me){ me.ahorrado = (me.ahorrado||0) + m; }
+  }
+  guardar(); cerrar(); pintar(); toast("Registrado");
+});
+
+document.addEventListener("click", function(e){
+  var t;
+  if((t = e.target.closest("[data-pagar]"))){
+    var f = S.fijos.filter(function(x){return x.id===t.dataset.pagar;})[0];
+    if(f){ f.pagos = f.pagos||[]; f.pagos.push(quincena().ini); guardar(); pintar(); toast("Marcado como pagado"); }
+  }
+  if((t = e.target.closest("[data-desmarcar]"))){
+    var f2 = S.fijos.filter(function(x){return x.id===t.dataset.desmarcar;})[0];
+    if(f2){ f2.pagos = (f2.pagos||[]).filter(function(p){return p!==quincena().ini;}); guardar(); pintar(); }
+  }
+  if((t = e.target.closest("[data-abonar]"))){
+    var d2 = S.deudas.filter(function(x){return x.id===t.dataset.abonar;})[0];
+    abonoDestino = {tipo:"deuda", id:t.dataset.abonar};
+    $("#abTitulo").textContent = "Abonar a " + (d2?d2.quien:"");
+    $("#abMonto").value=""; abrir("#h-abono");
+  }
+  if((t = e.target.closest("[data-guardar-meta]"))){
+    abonoDestino = {tipo:"meta", id:t.dataset.guardarMeta};
+    $("#abTitulo").textContent = "Guardar para la meta";
+    $("#abMonto").value=""; abrir("#h-abono");
+  }
+  if((t = e.target.closest("[data-delg]"))){ S.gastos = S.gastos.filter(function(x){return x.id!==t.dataset.delg;}); guardar(); pintar(); }
+  if((t = e.target.closest("[data-delf]"))){ S.fijos = S.fijos.filter(function(x){return x.id!==t.dataset.delf;}); guardar(); pintar(); }
+  if((t = e.target.closest("[data-deld]"))){ S.deudas = S.deudas.filter(function(x){return x.id!==t.dataset.deld;}); guardar(); pintar(); }
+  if((t = e.target.closest("[data-delm]"))){ S.metas = S.metas.filter(function(x){return x.id!==t.dataset.delm;}); guardar(); pintar(); }
+  if((t = e.target.closest("[data-deln]"))){ S.notas = S.notas.filter(function(x){return x.id!==t.dataset.deln;}); guardar(); pintar(); }
+});
+
+/* ================= mente ================= */
+$("#animosHoy").addEventListener("click", function(e){
+  var b = e.target.closest("[data-animo]"); if(!b) return;
+  animoSel = parseInt(b.dataset.animo,10); pintarMente();
+});
+$("#btnCheckin").addEventListener("click", function(){
+  if(!animoSel){ toast("Escoge cómo te sientes"); return; }
+  var hoy = hoyISO();
+  S.checkins = S.checkins.filter(function(x){return x.fecha!==hoy;});
+  S.checkins.push({ fecha:hoy, animo:animoSel });
+  S.gastos.forEach(function(g){ if(g.fecha===hoy) g.animo = animoSel; });
+  guardar(); pintar(); toast("Guardado");
+});
+$("#areasLista").addEventListener("click", function(e){
+  var b = e.target.closest("[data-area]"); if(!b) return;
+  areaSel = (areaSel===b.dataset.area) ? null : b.dataset.area;
+  pintarMente();
+});
+$("#nAreas").addEventListener("click", function(e){
+  var b = e.target.closest("[data-narea]"); if(!b) return;
+  areaNota = b.dataset.narea; pintarMente();
+});
+$("#btnNuevaNota").addEventListener("click", function(){
+  $("#nTexto").value=""; areaNota = areaSel; pintarMente(); abrir("#h-nota");
+});
+$("#nGuardar").addEventListener("click", function(){
+  var t = $("#nTexto").value.trim();
+  if(!t){ toast("Escribe algo primero"); return; }
+  S.notas.push({ id:id(), fecha:hoyISO(), area:areaNota, texto:t });
+  guardar(); cerrar(); pintar(); toast("Guardado en este teléfono");
+});
+$("#btnAyuda").addEventListener("click", function(){ abrir("#h-ayuda"); });
+
+/* ================= arranque ================= */
+["#gMonto","#aIngreso","#aDeuda","#aMeta","#fMonto","#dTotal","#mObjetivo","#abMonto"].forEach(function(s){ vincularMiles($(s)); });
+cargar();
+pintarCats();
+pintar();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+})();
+</script>
+</body>
+</html>
