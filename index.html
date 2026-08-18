@@ -116,6 +116,24 @@ nav button.on em{opacity:1}
   font-size:30px;font-weight:700;display:grid;place-items:center;
   box-shadow:0 8px 24px rgba(0,0,0,.45);
 }
+.fab2{
+  position:fixed;right:23px;bottom:calc(150px + env(safe-area-inset-bottom));z-index:41;
+  width:48px;height:48px;border-radius:16px;background:var(--sup2);color:var(--verde);
+  border:1px solid var(--verde);font-size:13px;font-weight:600;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
+}
+.fab2 b{font-size:19px;font-weight:700}
+
+.balance{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.balance div{background:var(--sup2);border-radius:11px;padding:12px}
+.balance span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tenue);font-weight:600;margin-bottom:5px}
+.balance b{font-family:"IBM Plex Mono",monospace;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums}
+.balance .full{grid-column:1/-1;background:transparent;border:1px solid var(--linea);padding:14px}
+.balance .full b{font-family:"Bricolage Grotesque",sans-serif;font-size:27px;font-weight:700;letter-spacing:-.02em}
+.entra{color:var(--verde)}
+.sale{color:var(--ambar)}
+.rojo{color:var(--rojo)}
 
 /* ---------- hojas ---------- */
 .velo{position:fixed;inset:0;background:rgba(8,11,15,.72);z-index:50;display:none}
@@ -198,8 +216,14 @@ nav button.on em{opacity:1}
   </div>
 
   <div class="tarjeta">
-    <div class="rotulo">Últimos gastos</div>
-    <div id="listaGastos"></div>
+    <div class="rotulo">Balance de la quincena</div>
+    <div class="balance" id="balance"></div>
+    <div class="sub" id="balancePie"></div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="rotulo">Movimientos</div>
+    <div id="listaMov"></div>
   </div>
 </section>
 
@@ -277,6 +301,7 @@ nav button.on em{opacity:1}
 
 </main>
 
+<button class="fab2" id="fab2" aria-label="Registrar entrada"><b>↓</b>entra</button>
 <button class="fab" id="fab" aria-label="Registrar gasto">+</button>
 
 <nav>
@@ -314,22 +339,62 @@ nav button.on em{opacity:1}
   </div>
 </div>
 
+<!-- hoja: entrada -->
+<div class="hoja" id="h-ingreso">
+  <div class="asa"></div>
+  <h2>Registrar entrada</h2>
+  <div class="campo">
+    <label for="iMonto">Cuánto entró</label>
+    <input id="iMonto" inputmode="numeric" placeholder="0" class="mono" style="font-size:26px;padding:14px">
+  </div>
+  <div class="campo">
+    <label>Qué fue</label>
+    <div class="opciones" id="iTipos"></div>
+  </div>
+  <div class="campo">
+    <label for="iNota">Nota (opcional)</label>
+    <input id="iNota" placeholder="Ej: trabajito, me pagaron un préstamo">
+  </div>
+  <div class="acciones">
+    <button class="btn sec" data-cerrar>Cancelar</button>
+    <button class="btn" id="iGuardar">Guardar</button>
+  </div>
+</div>
+
 <!-- hoja: ajustes -->
 <div class="hoja" id="h-ajustes">
   <div class="asa"></div>
   <h2>Tu quincena</h2>
   <div class="campo">
-    <label for="aIngreso">Lo que recibes por quincena</label>
+    <label for="aIngreso">Lo que sueles recibir (solo para llenar rápido)</label>
     <input id="aIngreso" inputmode="numeric" class="mono" placeholder="0">
   </div>
-  <div class="grid2">
-    <div class="campo">
-      <label for="aInicio">Día que cobras</label>
-      <input id="aInicio" type="date">
+  <div class="campo">
+    <label>Cómo cobras</label>
+    <div class="opciones" id="aModos"></div>
+  </div>
+  <div id="camposCal">
+    <div class="grid2">
+      <div class="campo">
+        <label for="aC1">Primer pago (día)</label>
+        <input id="aC1" type="number" min="1" max="31" value="15">
+      </div>
+      <div class="campo">
+        <label for="aC2">Segundo pago (día)</label>
+        <input id="aC2" type="number" min="1" max="31" value="30">
+      </div>
     </div>
-    <div class="campo">
-      <label for="aDias">Días que dura</label>
-      <input id="aDias" type="number" min="1" max="31" value="15">
+  </div>
+  <div id="camposFijo" style="display:none">
+    <div class="grid2">
+      <div class="campo">
+        <label for="aInicio">Día que cobraste</label>
+        <input id="aInicio" type="date">
+      </div>
+      <div class="campo">
+        <label for="aDias">Días que dura</label>
+        <input id="aDias" type="number" min="1" max="31" value="15">
+      </div>
     </div>
   </div>
   <div class="grid2">
@@ -342,7 +407,7 @@ nav button.on em{opacity:1}
       <input id="aMeta" inputmode="numeric" class="mono" placeholder="0">
     </div>
   </div>
-  <p class="aviso">Los pagos fijos se descuentan solos: no necesitas apartarlos aquí. Lo que quede después de fijos, abono y meta es lo que la app reparte entre los días.</p>
+  <p class="aviso">Cada vez que te entre plata, regístrala con el botón "entra" — la quincena y también los trabajitos sueltos. Los pagos fijos se descuentan solos. Lo que quede después de fijos, abono y meta es lo que la app reparte entre los días que faltan.</p>
   <div class="acciones">
     <button class="btn sec" data-cerrar>Cerrar</button>
     <button class="btn" id="aGuardar">Guardar</button>
@@ -458,8 +523,8 @@ nav button.on em{opacity:1}
 /* ================= estado ================= */
 var KEY = "rumbo.v1";
 var S = {
-  cfg:{ ingreso:0, inicio:hoyISO(), dias:15, deudaPlan:0, metaPlan:0 },
-  fijos:[], deudas:[], metas:[], gastos:[], checkins:[], notas:[]
+  cfg:{ ingreso:0, inicio:hoyISO(), dias:15, modo:"cal", corte1:15, corte2:30, deudaPlan:0, metaPlan:0 },
+  ingresos:[], fijos:[], deudas:[], metas:[], gastos:[], checkins:[], notas:[]
 };
 
 var CATS = ["Comida","Transporte","Servicios","Datos","Salud","Familia","Herramientas","Antojos","Otros"];
@@ -552,11 +617,16 @@ function cargar(){
     var d = JSON.parse(raw);
     if(d && typeof d === "object"){
       S.cfg = Object.assign(S.cfg, d.cfg||{});
-      ["fijos","deudas","metas","gastos","checkins","notas"].forEach(function(k){
+      ["ingresos","fijos","deudas","metas","gastos","checkins","notas"].forEach(function(k){
         if(Array.isArray(d[k])) S[k]=d[k];
       });
     }
   }catch(e){ toast("La copia guardada está dañada; empiezo de cero"); }
+  /* migración: el ingreso fijo viejo pasa a ser un movimiento de esta quincena */
+  if(!S.ingresos.length && (S.cfg.ingreso||0) > 0){
+    S.ingresos.push({ id:id(), fecha:quincena().ini, monto:S.cfg.ingreso, tipo:"quincena", nota:"Quincena", t:Date.now() });
+    guardar();
+  }
 }
 
 /* formateo de miles mientras se escribe */
@@ -568,15 +638,41 @@ function vincularMiles(el){
 }
 
 /* ================= quincena ================= */
+function corteEnMes(y,m,dia){
+  var ld = new Date(y,m+1,0).getDate();
+  return iso(new Date(y,m,Math.min(dia,ld)));
+}
 function quincena(){
-  var dias = Math.max(1, parseInt(S.cfg.dias,10)||15);
-  var ini = S.cfg.inicio || hoyISO();
   var hoy = hoyISO();
-  var d = difDias(ini, hoy);
-  if(d >= 0){ ini = sumaDias(ini, Math.floor(d/dias)*dias); }
-  else { ini = sumaDias(ini, -Math.ceil(Math.abs(d)/dias)*dias); }
-  var fin = sumaDias(ini, dias-1);
-  return { ini:ini, fin:fin, dias:dias, idx:Math.max(0,Math.min(dias-1, difDias(ini,hoy))), restan:Math.max(1, difDias(hoy,fin)+1) };
+
+  if(S.cfg.modo === "fijo"){
+    var dias = Math.max(1, parseInt(S.cfg.dias,10)||15);
+    var ini = S.cfg.inicio || hoy;
+    var d = difDias(ini, hoy);
+    ini = d>=0 ? sumaDias(ini, Math.floor(d/dias)*dias)
+               : sumaDias(ini, -Math.ceil(Math.abs(d)/dias)*dias);
+    var fin = sumaDias(ini, dias-1);
+    return { ini:ini, fin:fin, dias:dias, idx:Math.max(0,difDias(ini,hoy)), restan:Math.max(1,difDias(hoy,fin)+1) };
+  }
+
+  var c1 = Math.max(1,Math.min(31, parseInt(S.cfg.corte1,10)||15));
+  var c2 = Math.max(1,Math.min(31, parseInt(S.cfg.corte2,10)||30));
+  var h = fecha(hoy);
+  var cortes = [];
+  for(var k=-2;k<=2;k++){
+    var dd = new Date(h.getFullYear(), h.getMonth()+k, 1);
+    cortes.push(corteEnMes(dd.getFullYear(), dd.getMonth(), c1));
+    cortes.push(corteEnMes(dd.getFullYear(), dd.getMonth(), c2));
+  }
+  cortes = cortes.filter(function(v,i,a){ return a.indexOf(v)===i; }).sort();
+
+  var ini2 = cortes[0], fin2 = sumaDias(cortes[1],-1);
+  for(var j=0;j<cortes.length-1;j++){
+    if(cortes[j] <= hoy && hoy < cortes[j+1]){
+      ini2 = cortes[j]; fin2 = sumaDias(cortes[j+1],-1); break;
+    }
+  }
+  return { ini:ini2, fin:fin2, dias:difDias(ini2,fin2)+1, idx:Math.max(0,difDias(ini2,hoy)), restan:Math.max(1,difDias(hoy,fin2)+1) };
 }
 function enRango(f,a,b){ return f>=a && f<=b; }
 
@@ -588,9 +684,15 @@ function fijosPendientes(q){
   });
   return t;
 }
+function fijosPagados(q){
+  var t=0;
+  S.fijos.forEach(function(f){ if((f.pagos||[]).indexOf(q.ini)>=0) t += f.monto||0; });
+  return t;
+}
 function calculo(){
   var q = quincena();
-  var ingreso = S.cfg.ingreso||0;
+  var ingreso = 0;
+  S.ingresos.forEach(function(x){ if(enRango(x.fecha,q.ini,q.fin)) ingreso += x.monto||0; });
   var fijos = fijosPendientes(q);
   var deuda = S.cfg.deudaPlan||0;
   var meta  = S.cfg.metaPlan||0;
@@ -599,7 +701,7 @@ function calculo(){
   S.gastos.forEach(function(g){ if(enRango(g.fecha,q.ini,q.fin)) gastado += g.monto||0; });
   var queda = bolsa - gastado;
   return {
-    q:q, ingreso:ingreso, fijos:fijos, deuda:deuda, meta:meta,
+    q:q, ingreso:ingreso, fijos:fijos, fijosPagados:fijosPagados(q), deuda:deuda, meta:meta,
     bolsa:bolsa, gastado:gastado, queda:queda,
     hoyPuede: queda / q.restan,
     tope: q.dias>0 ? bolsa/q.dias : 0
@@ -611,14 +713,14 @@ function pintar(){ pintarHoy(); pintarComp(); pintarPatrones(); pintarMente(); }
 
 function pintarHoy(){
   var c = calculo();
-  $("#rotuloQ").textContent = "día " + (c.q.idx+1) + " de " + c.q.dias;
+  $("#rotuloQ").textContent = c.q.ini.slice(8)+"–"+c.q.fin.slice(8)+" · día "+(c.q.idx+1)+"/"+c.q.dias;
 
   var cif = $("#hoyCifra");
   cif.textContent = $$$(Math.max(0,c.hoyPuede));
   cif.classList.toggle("neg", c.queda < 0);
 
   if(!c.ingreso){
-    $("#hoySub").innerHTML = "Toca el engranaje y pon lo que recibes por quincena. Sin ese dato no puedo calcular nada.";
+    $("#hoySub").innerHTML = "Todavía no has registrado plata que entre en esta quincena. Toca el botón <b>entra</b> y anota lo que cobraste.";
   } else if(c.queda < 0){
     $("#hoySub").innerHTML = "Vas <b>"+$$$(Math.abs(c.queda))+"</b> por encima de lo que tenías para estos días. Quedan "+c.q.restan+" día(s).";
   } else {
@@ -664,11 +766,33 @@ function pintarHoy(){
     ? dBajo+" día(s) dentro del tope, "+dSobre+" por encima. La línea punteada es tu tope diario."
     : "Cada marca es un día. La línea punteada es tu tope diario.";
 
-  /* últimos gastos */
-  var ult = S.gastos.slice().sort(function(a,b){ return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(b.t||0)-(a.t||0); }).slice(0,8);
-  $("#listaGastos").innerHTML = ult.length ? ult.map(function(g){
-    return '<div class="fila"><div class="cuerpo"><div class="tit">'+esc(g.cat)+(g.nota?' · <span style="color:var(--tenue);font-weight:400">'+esc(g.nota)+'</span>':'')+'</div><div class="pie">'+g.fecha+'</div></div><div class="val">'+$$$(g.monto)+'</div><button class="borrar" data-delg="'+g.id+'" aria-label="Borrar">×</button></div>';
-  }).join("") : '<div class="vacio">Todavía no has anotado nada.<br>Toca el botón verde apenas gastes: mientras más rápido, más real es el número de arriba.</div>';
+  /* balance */
+  var salidas = c.gastado + c.fijosPagados;
+  var dif = c.ingreso - salidas;
+  $("#balance").innerHTML =
+    '<div><span>Entró</span><b class="entra">'+$$$(c.ingreso)+'</b></div>'+
+    '<div><span>Salió</span><b class="sale">'+$$$(salidas)+'</b></div>'+
+    '<div class="full"><span>Diferencia</span><b class="'+(dif<0?"rojo":"entra")+'">'+$$$(dif)+'</b></div>';
+  $("#balancePie").textContent = c.fijos>0
+    ? "Te faltan por pagar "+$$$(c.fijos)+" en cuentas fijas de esta quincena."
+    : (c.ingreso ? "No tienes cuentas fijas pendientes en esta quincena." : "");
+
+  /* movimientos combinados */
+  var mov = [];
+  S.ingresos.forEach(function(x){ if(enRango(x.fecha,c.q.ini,c.q.fin)) mov.push({e:1,o:x}); });
+  S.gastos.forEach(function(x){ if(enRango(x.fecha,c.q.ini,c.q.fin)) mov.push({e:0,o:x}); });
+  mov.sort(function(a,b){
+    if(a.o.fecha!==b.o.fecha) return a.o.fecha<b.o.fecha?1:-1;
+    return (b.o.t||0)-(a.o.t||0);
+  });
+  $("#listaMov").innerHTML = mov.length ? mov.slice(0,20).map(function(m){
+    var o = m.o;
+    if(m.e){
+      var et = o.tipo==="quincena" ? "Quincena" : "Entrada extra";
+      return '<div class="fila"><div class="cuerpo"><div class="tit entra">'+et+(o.nota?' · <span style="color:var(--tenue);font-weight:400">'+esc(o.nota)+'</span>':'')+'</div><div class="pie">'+o.fecha+'</div></div><div class="val entra">+'+$$$(o.monto)+'</div><button class="borrar" data-deli="'+o.id+'" aria-label="Borrar">×</button></div>';
+    }
+    return '<div class="fila"><div class="cuerpo"><div class="tit">'+esc(o.cat)+(o.nota?' · <span style="color:var(--tenue);font-weight:400">'+esc(o.nota)+'</span>':'')+'</div><div class="pie">'+o.fecha+'</div></div><div class="val">−'+$$$(o.monto)+'</div><button class="borrar" data-delg="'+o.id+'" aria-label="Borrar">×</button></div>';
+  }).join("") : '<div class="vacio">Nada anotado en esta quincena.<br>Botón verde para lo que sale, botón "entra" para lo que llega.</div>';
 }
 
 function pintarComp(){
@@ -867,6 +991,31 @@ $("#fab").addEventListener("click", function(){
   $("#gMonto").value=""; $("#gNota").value=""; motSel=null; pintarCats();
   abrir("#h-gasto"); setTimeout(function(){ $("#gMonto").focus(); },220);
 });
+/* ================= entradas ================= */
+var tipoIng = "extra";
+function pintarTipos(){
+  var base = S.cfg.ingreso ? " ("+$$$(S.cfg.ingreso)+")" : "";
+  $("#iTipos").innerHTML =
+    '<button data-tipo="quincena" class="'+(tipoIng==="quincena"?"on":"")+'">Mi quincena'+base+'</button>'+
+    '<button data-tipo="extra" class="'+(tipoIng==="extra"?"on":"")+'">Entrada extra</button>';
+}
+$("#iTipos").addEventListener("click", function(e){
+  var b = e.target.closest("[data-tipo]"); if(!b) return;
+  tipoIng = b.dataset.tipo;
+  if(tipoIng==="quincena" && S.cfg.ingreso && !num($("#iMonto"))) $("#iMonto").value = miles(S.cfg.ingreso);
+  pintarTipos();
+});
+$("#fab2").addEventListener("click", function(){
+  $("#iMonto").value=""; $("#iNota").value=""; tipoIng="extra"; pintarTipos();
+  abrir("#h-ingreso"); setTimeout(function(){ $("#iMonto").focus(); },220);
+});
+$("#iGuardar").addEventListener("click", function(){
+  var m = num($("#iMonto"));
+  if(!m){ toast("Escribe cuánto entró"); return; }
+  S.ingresos.push({ id:id(), fecha:hoyISO(), monto:m, tipo:tipoIng, nota:$("#iNota").value.trim(), t:Date.now() });
+  guardar(); cerrar(); pintar(); toast("Entrada registrada");
+});
+
 $("#gGuardar").addEventListener("click", function(){
   var m = num($("#gMonto"));
   if(!m){ toast("Escribe cuánto gastaste"); return; }
@@ -877,16 +1026,34 @@ $("#gGuardar").addEventListener("click", function(){
 });
 
 /* ================= ajustes ================= */
+var modoSel = "cal";
+function pintarModos(){
+  $("#aModos").innerHTML =
+    '<button data-modo="cal" class="'+(modoSel==="cal"?"on":"")+'">Días fijos del mes</button>'+
+    '<button data-modo="fijo" class="'+(modoSel==="fijo"?"on":"")+'">Cada N días</button>';
+  $("#camposCal").style.display  = modoSel==="cal" ? "" : "none";
+  $("#camposFijo").style.display = modoSel==="fijo" ? "" : "none";
+}
+$("#aModos").addEventListener("click", function(e){
+  var b = e.target.closest("[data-modo]"); if(!b) return;
+  modoSel = b.dataset.modo; pintarModos();
+});
 $("#btnAjustes").addEventListener("click", function(){
   $("#aIngreso").value = S.cfg.ingreso ? miles(S.cfg.ingreso) : "";
   $("#aInicio").value = S.cfg.inicio;
   $("#aDias").value = S.cfg.dias;
+  $("#aC1").value = S.cfg.corte1;
+  $("#aC2").value = S.cfg.corte2;
   $("#aDeuda").value = S.cfg.deudaPlan ? miles(S.cfg.deudaPlan) : "";
   $("#aMeta").value = S.cfg.metaPlan ? miles(S.cfg.metaPlan) : "";
+  modoSel = S.cfg.modo || "cal"; pintarModos();
   abrir("#h-ajustes");
 });
 $("#aGuardar").addEventListener("click", function(){
   S.cfg.ingreso = num($("#aIngreso"));
+  S.cfg.modo = modoSel;
+  S.cfg.corte1 = Math.max(1,Math.min(31, parseInt($("#aC1").value,10)||15));
+  S.cfg.corte2 = Math.max(1,Math.min(31, parseInt($("#aC2").value,10)||30));
   S.cfg.inicio = $("#aInicio").value || hoyISO();
   S.cfg.dias = Math.max(1, parseInt($("#aDias").value,10)||15);
   S.cfg.deudaPlan = num($("#aDeuda"));
@@ -984,6 +1151,7 @@ document.addEventListener("click", function(e){
     $("#abTitulo").textContent = "Guardar para la meta";
     $("#abMonto").value=""; abrir("#h-abono");
   }
+  if((t = e.target.closest("[data-deli]"))){ S.ingresos = S.ingresos.filter(function(x){return x.id!==t.dataset.deli;}); guardar(); pintar(); }
   if((t = e.target.closest("[data-delg]"))){ S.gastos = S.gastos.filter(function(x){return x.id!==t.dataset.delg;}); guardar(); pintar(); }
   if((t = e.target.closest("[data-delf]"))){ S.fijos = S.fijos.filter(function(x){return x.id!==t.dataset.delf;}); guardar(); pintar(); }
   if((t = e.target.closest("[data-deld]"))){ S.deudas = S.deudas.filter(function(x){return x.id!==t.dataset.deld;}); guardar(); pintar(); }
@@ -1025,9 +1193,12 @@ $("#nGuardar").addEventListener("click", function(){
 $("#btnAyuda").addEventListener("click", function(){ abrir("#h-ayuda"); });
 
 /* ================= arranque ================= */
-["#gMonto","#aIngreso","#aDeuda","#aMeta","#fMonto","#dTotal","#mObjetivo","#abMonto"].forEach(function(s){ vincularMiles($(s)); });
+["#gMonto","#iMonto","#aIngreso","#aDeuda","#aMeta","#fMonto","#dTotal","#mObjetivo","#abMonto"].forEach(function(s){ vincularMiles($(s)); });
 cargar();
+modoSel = S.cfg.modo || "cal";
 pintarCats();
+pintarTipos();
+pintarModos();
 pintar();
 
 if("serviceWorker" in navigator){
