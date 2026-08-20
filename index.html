@@ -200,6 +200,7 @@ nav button.on em{opacity:1}
 
 <!-- ============ HOY ============ -->
 <section class="vista on" id="v-hoy">
+  <div class="opciones" id="lente" style="margin-bottom:14px"></div>
   <div class="tarjeta">
     <div class="rotulo">Puedes gastar hoy</div>
     <div class="cifra mono" id="hoyCifra">$0</div>
@@ -216,7 +217,7 @@ nav button.on em{opacity:1}
   </div>
 
   <div class="tarjeta">
-    <div class="rotulo">Balance de la quincena</div>
+    <div class="rotulo" id="rotBalance">Balance del período</div>
     <div class="balance" id="balance"></div>
     <div class="sub" id="balancePie"></div>
   </div>
@@ -250,6 +251,10 @@ nav button.on em{opacity:1}
 
 <!-- ============ PATRONES ============ -->
 <section class="vista" id="v-pat">
+  <div class="tarjeta">
+    <div class="rotulo">Dónde está la dificultad</div>
+    <div id="diagnostico"></div>
+  </div>
   <div class="tarjeta">
     <div class="rotulo">En qué se te va</div>
     <div id="porCategoria"></div>
@@ -523,7 +528,7 @@ nav button.on em{opacity:1}
 /* ================= estado ================= */
 var KEY = "rumbo.v1";
 var S = {
-  cfg:{ ingreso:0, inicio:hoyISO(), dias:15, modo:"cal", corte1:15, corte2:30, deudaPlan:0, metaPlan:0 },
+  cfg:{ ingreso:0, inicio:hoyISO(), dias:15, modo:"cal", corte1:15, corte2:30, vista:"q", deudaPlan:0, metaPlan:0 },
   ingresos:[], fijos:[], deudas:[], metas:[], gastos:[], checkins:[], notas:[]
 };
 
@@ -595,7 +600,17 @@ var AREAS = {
 /* ================= utilidades ================= */
 function $(s,c){ return (c||document).querySelector(s); }
 function $$(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); }
-function hoyISO(){ var d=new Date(); return iso(d); }
+var _fmtBog;
+function hoyISO(){
+  if(_fmtBog === undefined){
+    try{
+      _fmtBog = new Intl.DateTimeFormat("en-CA",{timeZone:"America/Bogota",year:"numeric",month:"2-digit",day:"2-digit"});
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(_fmtBog.format(new Date()))) _fmtBog = null;
+    }catch(e){ _fmtBog = null; }
+  }
+  if(_fmtBog) return _fmtBog.format(new Date());
+  return iso(new Date());
+}
 function iso(d){ return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); }
 function p2(n){ return n<10?"0"+n:""+n; }
 function fecha(s){ var a=s.split("-"); return new Date(+a[0],+a[1]-1,+a[2]); }
@@ -622,6 +637,14 @@ function cargar(){
       });
     }
   }catch(e){ toast("La copia guardada está dañada; empiezo de cero"); }
+  /* migración: pagos de fijos pasan de fecha completa a mes (AAAA-MM) */
+  S.fijos.forEach(function(f){
+    if(!f.dia) f.dia = 1;
+    if(Array.isArray(f.pagos)){
+      f.pagos = f.pagos.map(function(x){ return String(x).slice(0,7); })
+                       .filter(function(v,i,a){ return a.indexOf(v)===i; });
+    }
+  });
   /* migración: el ingreso fijo viejo pasa a ser un movimiento de esta quincena */
   if(!S.ingresos.length && (S.cfg.ingreso||0) > 0){
     S.ingresos.push({ id:id(), fecha:quincena().ini, monto:S.cfg.ingreso, tipo:"quincena", nota:"Quincena", t:Date.now() });
@@ -676,21 +699,41 @@ function quincena(){
 }
 function enRango(f,a,b){ return f>=a && f<=b; }
 
-function fijosPendientes(q){
-  var t=0;
-  S.fijos.forEach(function(f){
-    if((f.pagos||[]).indexOf(q.ini)>=0) return;
-    t += f.monto||0;
-  });
-  return t;
+function mes(){
+  var hoy = hoyISO(), d = fecha(hoy);
+  var ini = iso(new Date(d.getFullYear(), d.getMonth(), 1));
+  var fin = iso(new Date(d.getFullYear(), d.getMonth()+1, 0));
+  return { ini:ini, fin:fin, dias:difDias(ini,fin)+1, idx:Math.max(0,difDias(ini,hoy)), restan:Math.max(1,difDias(hoy,fin)+1), tipo:"m" };
 }
-function fijosPagados(q){
-  var t=0;
-  S.fijos.forEach(function(f){ if((f.pagos||[]).indexOf(q.ini)>=0) t += f.monto||0; });
-  return t;
+function periodoActual(){
+  if(S.cfg.vista === "m") return mes();
+  var q = quincena(); q.tipo = "q"; return q;
+}
+function mesesDe(p){
+  var out = [], cur = p.ini;
+  while(cur <= p.fin){ var k = cur.slice(0,7); if(out.indexOf(k)<0) out.push(k); cur = sumaDias(cur,1); }
+  return out;
+}
+function fijosDe(p){
+  var ms = mesesDe(p), out = [];
+  S.fijos.forEach(function(f){
+    ms.forEach(function(mk){
+      var v = corteEnMes(+mk.slice(0,4), +mk.slice(5,7)-1, f.dia||1);
+      if(v >= p.ini && v <= p.fin){
+        out.push({ f:f, vence:v, mes:mk, pagado:(f.pagos||[]).indexOf(mk)>=0 });
+      }
+    });
+  });
+  return out.sort(function(a,b){ return a.vence<b.vence?-1:1; });
+}
+function fijosPendientes(p){
+  return fijosDe(p).reduce(function(a,x){ return a + (x.pagado?0:(x.f.monto||0)); },0);
+}
+function fijosPagados(p){
+  return fijosDe(p).reduce(function(a,x){ return a + (x.pagado?(x.f.monto||0):0); },0);
 }
 function calculo(){
-  var q = quincena();
+  var q = periodoActual();
   var ingreso = 0;
   S.ingresos.forEach(function(x){ if(enRango(x.fecha,q.ini,q.fin)) ingreso += x.monto||0; });
   var fijos = fijosPendientes(q);
@@ -713,7 +756,13 @@ function pintar(){ pintarHoy(); pintarComp(); pintarPatrones(); pintarMente(); }
 
 function pintarHoy(){
   var c = calculo();
-  $("#rotuloQ").textContent = c.q.ini.slice(8)+"–"+c.q.fin.slice(8)+" · día "+(c.q.idx+1)+"/"+c.q.dias;
+  var esMes = S.cfg.vista === "m";
+  $("#lente").innerHTML =
+    '<button data-lente="q" class="'+(!esMes?"on":"")+'">Quincena</button>'+
+    '<button data-lente="m" class="'+(esMes?"on":"")+'">Mes</button>';
+  $("#rotuloQ").textContent = esMes
+    ? c.q.ini.slice(0,7)+" · día "+(c.q.idx+1)+"/"+c.q.dias
+    : c.q.ini.slice(8)+"–"+c.q.fin.slice(8)+" · día "+(c.q.idx+1)+"/"+c.q.dias;
 
   var cif = $("#hoyCifra");
   cif.textContent = $$$(Math.max(0,c.hoyPuede));
@@ -767,6 +816,7 @@ function pintarHoy(){
     : "Cada marca es un día. La línea punteada es tu tope diario.";
 
   /* balance */
+  $("#rotBalance").textContent = esMes ? "Balance del mes" : "Balance de la quincena";
   var salidas = c.gastado + c.fijosPagados;
   var dif = c.ingreso - salidas;
   $("#balance").innerHTML =
@@ -774,8 +824,8 @@ function pintarHoy(){
     '<div><span>Salió</span><b class="sale">'+$$$(salidas)+'</b></div>'+
     '<div class="full"><span>Diferencia</span><b class="'+(dif<0?"rojo":"entra")+'">'+$$$(dif)+'</b></div>';
   $("#balancePie").textContent = c.fijos>0
-    ? "Te faltan por pagar "+$$$(c.fijos)+" en cuentas fijas de esta quincena."
-    : (c.ingreso ? "No tienes cuentas fijas pendientes en esta quincena." : "");
+    ? "Te faltan por pagar "+$$$(c.fijos)+" en cuentas fijas de este período."
+    : (c.ingreso ? "No tienes cuentas fijas pendientes en este período." : "");
 
   /* movimientos combinados */
   var mov = [];
@@ -792,19 +842,29 @@ function pintarHoy(){
       return '<div class="fila"><div class="cuerpo"><div class="tit entra">'+et+(o.nota?' · <span style="color:var(--tenue);font-weight:400">'+esc(o.nota)+'</span>':'')+'</div><div class="pie">'+o.fecha+'</div></div><div class="val entra">+'+$$$(o.monto)+'</div><button class="borrar" data-deli="'+o.id+'" aria-label="Borrar">×</button></div>';
     }
     return '<div class="fila"><div class="cuerpo"><div class="tit">'+esc(o.cat)+(o.nota?' · <span style="color:var(--tenue);font-weight:400">'+esc(o.nota)+'</span>':'')+'</div><div class="pie">'+o.fecha+'</div></div><div class="val">−'+$$$(o.monto)+'</div><button class="borrar" data-delg="'+o.id+'" aria-label="Borrar">×</button></div>';
-  }).join("") : '<div class="vacio">Nada anotado en esta quincena.<br>Botón verde para lo que sale, botón "entra" para lo que llega.</div>';
+  }).join("") : '<div class="vacio">Nada anotado en este período.<br>Botón verde para lo que sale, botón "entra" para lo que llega.</div>';
 }
 
 function pintarComp(){
-  var q = quincena(), hoy = hoyISO();
+  var p = periodoActual(), hoy = hoyISO();
 
-  $("#listaFijos").innerHTML = S.fijos.length ? S.fijos.map(function(f){
-    var pagado = (f.pagos||[]).indexOf(q.ini)>=0;
-    var chip = pagado ? '<span class="chip ok">pagado</span>' : '<span class="chip">día '+(f.dia||"—")+'</span>';
+  var fl = fijosDe(p);
+  $("#listaFijos").innerHTML = fl.length ? fl.map(function(x){
+    var f = x.f, chip;
+    if(x.pagado) chip = '<span class="chip ok">pagado</span>';
+    else {
+      var dd = difDias(hoy, x.vence);
+      chip = dd<0 ? '<span class="chip ven">venció el '+x.vence.slice(8)+'</span>'
+           : dd===0 ? '<span class="chip urg">vence hoy</span>'
+           : dd<=3 ? '<span class="chip urg">en '+dd+' día(s)</span>'
+           : '<span class="chip">día '+x.vence.slice(8)+'</span>';
+    }
     return '<div class="fila"><div class="cuerpo"><div class="tit">'+esc(f.nombre)+'</div><div class="pie">'+chip+'</div></div><div class="val">'+$$$(f.monto)+'</div>'+
-      (pagado?'<button class="chip" data-desmarcar="'+f.id+'">deshacer</button>':'<button class="btn peq" style="flex:0 0 auto;padding:8px 12px" data-pagar="'+f.id+'">Pagar</button>')+
+      (x.pagado?'<button class="chip" data-desmarcar="'+f.id+'" data-mes="'+x.mes+'">deshacer</button>':'<button class="btn peq" style="flex:0 0 auto;padding:8px 12px" data-pagar="'+f.id+'" data-mes="'+x.mes+'">Pagar</button>')+
       '<button class="borrar" data-delf="'+f.id+'" aria-label="Borrar">×</button></div>';
-  }).join("") : '<div class="vacio">Arriendo, luz, agua, internet, datos.<br>Ponlos aquí y dejan de sorprenderte.</div>';
+  }).join("") : (S.fijos.length
+      ? '<div class="vacio">Tus pagos fijos no vencen dentro de este período.<br>Cambia a vista Mes en la pestaña Hoy para verlos todos.</div>'
+      : '<div class="vacio">Arriendo, luz, agua, internet, datos.<br>Ponlos aquí con el día en que vencen y dejan de sorprenderte.</div>');
 
   var deudasOrd = S.deudas.slice().sort(function(a,b){ return (b.peso||1)-(a.peso||1); });
   $("#listaDeudas").innerHTML = deudasOrd.length ? deudasOrd.map(function(d){
@@ -834,9 +894,62 @@ function pintarComp(){
 
 function pintarPatrones(){
   var c = calculo(), q = c.q;
+  var lente = q.tipo==="m" ? "este mes" : "esta quincena";
+
   var porCat = {};
   S.gastos.forEach(function(g){ if(enRango(g.fecha,q.ini,q.fin)) porCat[g.cat]=(porCat[g.cat]||0)+(g.monto||0); });
   var arr = Object.keys(porCat).map(function(k){return {k:k,v:porCat[k]};}).sort(function(a,b){return b.v-a.v;});
+
+  /* ---- diagnóstico ---- */
+  var totalFijos = c.fijos + c.fijosPagados;
+  var salidas = c.gastado + c.fijosPagados;
+  var noNec = 0, conMotivo = 0;
+  S.gastos.forEach(function(g){
+    if(!enRango(g.fecha,q.ini,q.fin) || !g.motivo) return;
+    conMotivo += g.monto||0;
+    if(g.motivo !== "necesidad") noNec += g.monto||0;
+  });
+  var pesoFijos = c.ingreso ? totalFijos/c.ingreso : 0;
+  var pesoNoNec = conMotivo ? noNec/conMotivo : 0;
+  var topCat = arr[0] || null;
+  var pesoTop = (topCat && c.gastado) ? topCat.v/c.gastado : 0;
+  var difer = c.ingreso - salidas - c.fijos;
+
+  var d = "";
+  if(!c.ingreso){
+    d = '<div class="vacio">Falta registrar lo que te entró '+lente+'.<br>Sin eso no hay con qué comparar.</div>';
+  } else {
+    var veredicto, detalle;
+    if(pesoFijos >= 0.5){
+      veredicto = "El peso está en lo fijo, no en lo que gastas suelto.";
+      detalle = "Tus cuentas fijas se llevan el "+(pesoFijos*100).toFixed(0)+"% de lo que entra. Cuando pasa del 50%, el problema no se arregla anotando mejor ni apretándose más: o baja el fijo, o sube el ingreso. Anotar te sirve para verlo, no para taparlo.";
+    } else if(pesoNoNec >= 0.35 && conMotivo > 0){
+      veredicto = "El peso está en el gasto que responde a un estado, no a una cuenta.";
+      detalle = "De lo que marcaste con motivo, el "+(pesoNoNec*100).toFixed(0)+"% no fue por necesidad ("+$$$(noNec)+"). Ese es el pedazo sobre el que sí tienes control directo, y casi siempre se mueve solo cuando entiendes qué lo dispara.";
+    } else if(pesoTop >= 0.4 && topCat){
+      veredicto = "El peso está concentrado en una sola categoría: "+topCat.k+".";
+      detalle = topCat.k+" se lleva el "+(pesoTop*100).toFixed(0)+"% de tu gasto suelto ("+$$$(topCat.v)+"). Vale la pena mirar si eso es normal para ti o si "+lente+" se salió de lo común.";
+    } else if(difer < 0){
+      veredicto = "No hay un hueco concreto: el ingreso simplemente no alcanza para este nivel de gasto.";
+      detalle = "Vas "+$$$(Math.abs(difer))+" por debajo contando lo que falta por pagar. No es desorden, es margen. Ahí la salida está por el lado del ingreso o de renegociar un fijo.";
+    } else {
+      veredicto = "Por ahora vas cuadrado.";
+      detalle = "Con lo registrado "+lente+", lo que entra alcanza para lo que sale y queda "+$$$(difer)+" de margen.";
+    }
+
+    d = '<p style="font-size:16px;font-weight:600;margin:0 0 8px;line-height:1.4">'+veredicto+'</p>'+
+        '<p class="aviso" style="border-color:var(--violeta)">'+detalle+'</p>'+
+        fila2("Cuentas fijas sobre lo que entra", (pesoFijos*100).toFixed(0)+"%")+
+        fila2("Gasto suelto", $$$(c.gastado))+
+        fila2("Categoría más pesada", topCat ? topCat.k+" · "+$$$(topCat.v) : "—")+
+        fila2("Gasto sin marcar motivo", $$$(Math.max(0,c.gastado-conMotivo)));
+
+    if(conMotivo < c.gastado*0.5){
+      d += '<p class="aviso" style="margin-top:10px">Más de la mitad de tus gastos no tienen motivo marcado, así que este diagnóstico está mirando con un ojo. Marca el "por qué" y en la próxima vuelta te digo algo más firme.</p>';
+    }
+  }
+  $("#diagnostico").innerHTML = d;
+
   var max = arr.length?arr[0].v:1;
   $("#porCategoria").innerHTML = arr.length ? arr.map(function(x){
     var pct = c.gastado? (x.v/c.gastado*100):0;
@@ -991,6 +1104,11 @@ $("#fab").addEventListener("click", function(){
   $("#gMonto").value=""; $("#gNota").value=""; motSel=null; pintarCats();
   abrir("#h-gasto"); setTimeout(function(){ $("#gMonto").focus(); },220);
 });
+$("#lente").addEventListener("click", function(e){
+  var b = e.target.closest("[data-lente]"); if(!b) return;
+  S.cfg.vista = b.dataset.lente; guardar(); pintar();
+});
+
 /* ================= entradas ================= */
 var tipoIng = "extra";
 function pintarTipos(){
@@ -1134,11 +1252,13 @@ document.addEventListener("click", function(e){
   var t;
   if((t = e.target.closest("[data-pagar]"))){
     var f = S.fijos.filter(function(x){return x.id===t.dataset.pagar;})[0];
-    if(f){ f.pagos = f.pagos||[]; f.pagos.push(quincena().ini); guardar(); pintar(); toast("Marcado como pagado"); }
+    var mk = t.dataset.mes || hoyISO().slice(0,7);
+    if(f){ f.pagos = f.pagos||[]; if(f.pagos.indexOf(mk)<0) f.pagos.push(mk); guardar(); pintar(); toast("Marcado como pagado"); }
   }
   if((t = e.target.closest("[data-desmarcar]"))){
     var f2 = S.fijos.filter(function(x){return x.id===t.dataset.desmarcar;})[0];
-    if(f2){ f2.pagos = (f2.pagos||[]).filter(function(p){return p!==quincena().ini;}); guardar(); pintar(); }
+    var mk2 = t.dataset.mes || hoyISO().slice(0,7);
+    if(f2){ f2.pagos = (f2.pagos||[]).filter(function(p){return p!==mk2;}); guardar(); pintar(); }
   }
   if((t = e.target.closest("[data-abonar]"))){
     var d2 = S.deudas.filter(function(x){return x.id===t.dataset.abonar;})[0];

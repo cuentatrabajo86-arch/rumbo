@@ -1,5 +1,5 @@
 /* Rumbo — service worker: cache-first para la carcasa, red para el resto */
-var CACHE = "rumbo-v2";
+var CACHE = "rumbo-v3";
 var ARCHIVOS = [
   "./",
   "./index.html",
