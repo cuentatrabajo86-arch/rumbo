@@ -1,7 +1,9 @@
-// Service worker V1 — solo cachea el "shell" de la app.
+// Service worker — solo cachea el "shell" de la app.
 // V9 (seguridad/rendimiento/persistencia) ampliará esta estrategia.
+// El nombre de la caché sube de versión en cada release para que el
+// teléfono no se quede con el shell viejo (ver activate más abajo).
 
-const CACHE_NAME = 'brujula-v1';
+const CACHE_NAME = 'rumbo-v2';
 const APP_SHELL = [
   './',
   './index.html',

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Brújula — Entiende tu dinero</title>
+<title>Rumbo — Entiende tu dinero</title>
 <meta name="description" content="Un asistente financiero personal simple: entiende tu dinero, reduce gastos y descubre cuánto puedes ahorrar.">
 <meta name="theme-color" content="#F5F6F8">
 
@@ -19,8 +19,9 @@
 <style>
 /* ============================================================
    1. TOKENS DE DISEÑO
-   Todo el sistema visual vive aquí. V2 podrá ampliar esta base
-   (modo oscuro, más variantes) sin tocar los componentes.
+   Todo el sistema visual vive aquí. V2 sumó tonos de texto
+   sobre fondo suave (mejor contraste) y no tocó los nombres
+   de las variables existentes, para no romper nada de V1.
    ============================================================ */
 :root{
   /* Superficie y texto */
@@ -35,17 +36,24 @@
   --brand-ink:  #7A5710;
   --brand-soft: #F3E6CC;
 
-  /* Semántico — significado fijo, no decorativo */
-  --income:      #16A34A;
-  --income-soft: #E7F6ED;
+  /* Semántico — significado fijo, no decorativo.
+     Los "-text" son variantes más oscuras, solo para texto
+     sobre fondo "-soft" (mejor contraste, accesibilidad). */
+  --income:       #16A34A;
+  --income-soft:  #E7F6ED;
+  --income-text:  #15803D;
   --expense:      #DC2626;
   --expense-soft: #FBEAEA;
+  --expense-text: #B91C1C;
   --savings:      #2563EB;
   --savings-soft: #E8EFFD;
-  --debt:      #E4572E;
-  --debt-soft: #FCEBE5;
-  --goals:      #7C3AED;
-  --goals-soft: #F1E9FD;
+  --savings-text: #1D4ED8;
+  --debt:         #E4572E;
+  --debt-soft:    #FCEBE5;
+  --debt-text:    #C2410C;
+  --goals:        #7C3AED;
+  --goals-soft:   #F1E9FD;
+  --goals-text:   #6D28D9;
 
   /* Escala tipográfica */
   --font-ui:     'Sora', -apple-system, sans-serif;
@@ -67,7 +75,7 @@
    2. BASE / RESET
    ============================================================ */
 *, *::before, *::after{ box-sizing: border-box; }
-html, body{ height: 100%; }
+html, body{ height: 100%; overflow-x: hidden; }
 body{
   margin: 0;
   font-family: var(--font-ui);
@@ -75,6 +83,9 @@ body{
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
+}
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
 h1, h2, h3, p{ margin: 0; }
 button{ font-family: inherit; border: none; background: none; cursor: pointer; }
@@ -96,7 +107,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
 
 .app-header{
   height: var(--header-height);
-  padding: 0 var(--sp-5);
+  padding: env(safe-area-inset-top) var(--sp-5) 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -144,17 +155,22 @@ ul{ list-style: none; margin: 0; padding: 0; }
   justify-content: center;
   gap: 3px;
   font-size: 11px;
+  font-weight: 500;
   color: var(--ink-soft);
+  transition: transform 100ms ease, color 150ms ease;
 }
-.bottom-nav__item svg{ width: 22px; height: 22px; }
-.bottom-nav__item[aria-current="page"]{ color: var(--brand-ink); }
-.bottom-nav__item[aria-current="page"] .bottom-nav__dot{
-  display: block;
+.bottom-nav__item:active{ transform: scale(0.94); }
+.bottom-nav__icon{
+  width: 34px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  transition: background-color 150ms ease;
 }
-.bottom-nav__dot{
-  display: none;
-  width: 4px; height: 4px; border-radius: 50%;
-  background: var(--brand); position: absolute; margin-top: -30px;
+.bottom-nav__item svg{ width: 21px; height: 21px; }
+.bottom-nav__item[aria-current="page"]{ color: var(--ink); font-weight: 600; }
+.bottom-nav__item[aria-current="page"] .bottom-nav__icon{
+  background: var(--brand-soft);
+  color: var(--brand-ink);
 }
 
 /* ============================================================
@@ -195,6 +211,38 @@ ul{ list-style: none; margin: 0; padding: 0; }
   margin-top: var(--sp-3);
 }
 
+/* Desglose ingresos/gastos bajo el hero. En V1 muestra $0 porque no
+   hay movimientos; V3 lo llenará con datos reales sin cambiar el
+   marcado. El símbolo (↑/↓) es la señal principal, el color acompaña
+   — nunca al revés (accesibilidad, sección 7). */
+.stat-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+.stat-item{
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+}
+.stat-item__icon{
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.stat-item__icon--income{ background: var(--income-soft); color: var(--income-text); }
+.stat-item__icon--expense{ background: var(--expense-soft); color: var(--expense-text); }
+.stat-item__label{ font-size: 12px; color: var(--ink-soft); }
+.stat-item__value{ font-size: 15px; font-weight: 600; }
+
 /* Botones */
 .btn{
   display: inline-flex;
@@ -210,6 +258,10 @@ ul{ list-style: none; margin: 0; padding: 0; }
 .btn-primary{ background: var(--brand); color: #FFFFFF; }
 .btn-secondary{ background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .btn-block{ width: 100%; }
+.btn{ transition: transform 100ms ease, opacity 100ms ease; }
+.btn:active{ transform: scale(0.97); opacity: 0.9; }
+.icon-btn{ transition: transform 100ms ease; }
+.icon-btn:active{ transform: scale(0.92); }
 
 .quick-actions{
   display: flex;
@@ -240,20 +292,57 @@ ul{ list-style: none; margin: 0; padding: 0; }
   line-height: 1.5;
 }
 
-/* Insignia semántica pequeña (para futuras listas de movimientos) */
+/* Insignia semántica pequeña (para futuras listas de movimientos).
+   V2: el texto usa el tono "-text" (más oscuro) sobre el fondo
+   "-soft" para cumplir contraste accesible — el color nunca es
+   la única señal: V3 debe anteponer el símbolo correspondiente
+   (↑ ingreso, ↓ gasto, ● ahorro) al valor, no solo colorearlo. */
 .badge{
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   font-size: 12px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
 }
-.badge--income{ background: var(--income-soft); color: var(--income); }
-.badge--expense{ background: var(--expense-soft); color: var(--expense); }
-.badge--savings{ background: var(--savings-soft); color: var(--savings); }
-.badge--debt{ background: var(--debt-soft); color: var(--debt); }
-.badge--goals{ background: var(--goals-soft); color: var(--goals); }
+.badge--income{ background: var(--income-soft); color: var(--income-text); }
+.badge--expense{ background: var(--expense-soft); color: var(--expense-text); }
+.badge--savings{ background: var(--savings-soft); color: var(--savings-text); }
+.badge--debt{ background: var(--debt-soft); color: var(--debt-text); }
+.badge--goals{ background: var(--goals-soft); color: var(--goals-text); }
+
+/* Tarjeta de oportunidad de ahorro — el motor de V5 la llenará con
+   cálculos reales. Por ahora es solo el componente visual, listo
+   para recibir contenido sin rediseñar nada. */
+.insight-card{
+  background: var(--brand-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-5);
+  margin-top: var(--sp-4);
+}
+.insight-card__eyebrow{
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600;
+  color: var(--brand-ink);
+}
+.insight-card__title{
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: var(--sp-2);
+  line-height: 1.4;
+}
+.insight-card__body{
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: var(--sp-1);
+  line-height: 1.5;
+}
+.insight-card__preview-tag{
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: var(--sp-3);
+}
 
 /* Encabezado de sección de pantalla */
 .screen-title{
@@ -270,7 +359,11 @@ ul{ list-style: none; margin: 0; padding: 0; }
 
 /* pantalla oculta por defecto; el router alterna esta clase */
 .screen{ display: none; }
-.screen.is-active{ display: block; }
+.screen.is-active{ display: block; animation: screen-in 180ms ease; }
+@keyframes screen-in{
+  from{ opacity: 0; transform: translateY(6px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 <body>
@@ -297,6 +390,23 @@ ul{ list-style: none; margin: 0; padding: 0; }
         <div class="hero__hint">Aún no hay movimientos registrados</div>
       </div>
 
+      <div class="stat-row">
+        <div class="stat-item">
+          <span class="stat-item__icon stat-item__icon--income" aria-hidden="true">↑</span>
+          <div>
+            <div class="stat-item__label">Ingresos</div>
+            <div class="stat-item__value" data-income>$0</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <span class="stat-item__icon stat-item__icon--expense" aria-hidden="true">↓</span>
+          <div>
+            <div class="stat-item__label">Gastos</div>
+            <div class="stat-item__value" data-expense>$0</div>
+          </div>
+        </div>
+      </div>
+
       <div class="quick-actions">
         <button class="btn btn-primary btn-block" data-route="movimientos">+ Ingreso</button>
         <button class="btn btn-secondary btn-block" data-route="movimientos">− Gasto</button>
@@ -311,6 +421,16 @@ ul{ list-style: none; margin: 0; padding: 0; }
           <p class="empty-state__body">Registra tu primer ingreso o gasto y comenzaremos a conocer cómo se mueve tu dinero.</p>
         </div>
       </div>
+
+      <!-- Vista previa del motor de ahorro (V5). Marcada como demo
+           y separada del estado real; se retira o se activa con
+           datos reales cambiando demoMode en el JS, sin tocar el HTML. -->
+      <div class="insight-card" id="insight-preview" hidden>
+        <div class="insight-card__eyebrow">💡 Encontramos una oportunidad</div>
+        <p class="insight-card__title">Este gasto representa aproximadamente $280.000 al mes.</p>
+        <p class="insight-card__body">Si lo reduces un 25%, podrías ahorrar cerca de $70.000 al mes — unos $840.000 al año.</p>
+        <p class="insight-card__preview-tag">Vista previa del diseño · esto no es un dato real todavía</p>
+      </div>
     </section>
 
     <!-- ============ MOVIMIENTOS ============ -->
@@ -322,8 +442,8 @@ ul{ list-style: none; margin: 0; padding: 0; }
           <div class="empty-state__icon" style="background:var(--paper);">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="1.8"><path d="M6 4h9l4 4v12H6z"/><path d="M9 12h6M9 16h6"/></svg>
           </div>
-          <p class="empty-state__title">Sin movimientos todavía</p>
-          <p class="empty-state__body">Cuando registres un ingreso o un gasto, aparecerá aquí ordenado por fecha. El registro rápido llega en la próxima versión.</p>
+          <p class="empty-state__title">Tu dinero empieza aquí</p>
+          <p class="empty-state__body">Cuando registres un ingreso o un gasto, aparecerá aquí ordenado por fecha.</p>
         </div>
       </div>
     </section>
@@ -331,7 +451,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
     <!-- ============ PRESUPUESTO ============ -->
     <section class="screen" id="screen-presupuesto" data-screen>
       <h1 class="screen-title">Presupuesto</h1>
-      <p class="screen-subtitle">Lo que entra, lo que ya está comprometido</p>
+      <p class="screen-subtitle">Primero conozcamos cómo se mueve tu dinero</p>
       <div class="card">
         <div class="empty-state">
           <div class="empty-state__icon" style="background:var(--debt-soft);">
@@ -378,37 +498,32 @@ ul{ list-style: none; margin: 0; padding: 0; }
       <h1 class="screen-title">Perfil</h1>
       <div class="card">
         <p class="empty-state__title">Iván</p>
-        <p class="empty-state__body">Configuración de la cuenta, moneda y preferencias. Se completará en próximas versiones.</p>
+        <p class="empty-state__body">Aquí vas a poder ajustar tu cuenta, tu moneda y tus preferencias.</p>
       </div>
     </section>
 
   </main>
 
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" aria-label="Navegación principal">
     <button class="bottom-nav__item" data-route="inicio" aria-current="page">
-      <span class="bottom-nav__dot"></span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-6 8 6v9a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg>
-      Inicio
+      <span class="bottom-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-6 8 6v9a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg></span>
+      <span>Inicio</span>
     </button>
     <button class="bottom-nav__item" data-route="movimientos">
-      <span class="bottom-nav__dot"></span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h9l4 4v12H6z"/><path d="M9 12h6M9 16h6"/></svg>
-      Movimientos
+      <span class="bottom-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h9l4 4v12H6z"/><path d="M9 12h6M9 16h6"/></svg></span>
+      <span>Movimientos</span>
     </button>
     <button class="bottom-nav__item" data-route="presupuesto">
-      <span class="bottom-nav__dot"></span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16"/></svg>
-      Presupuesto
+      <span class="bottom-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16"/></svg></span>
+      <span>Presupuesto</span>
     </button>
     <button class="bottom-nav__item" data-route="ahorros">
-      <span class="bottom-nav__dot"></span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M7 8a5 5 0 0110 0c0 3-5 3-5 6a5 5 0 0010 0"/></svg>
-      Ahorros
+      <span class="bottom-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M7 8a5 5 0 0110 0c0 3-5 3-5 6a5 5 0 0010 0"/></svg></span>
+      <span>Ahorros</span>
     </button>
     <button class="bottom-nav__item" data-route="metas">
-      <span class="bottom-nav__dot"></span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg>
-      Metas
+      <span class="bottom-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg></span>
+      <span>Metas</span>
     </button>
   </nav>
 
@@ -499,9 +614,18 @@ ul{ list-style: none; margin: 0; padding: 0; }
   }
 
   function initHero(){
-    // V1: siempre $0 porque no hay movimientos reales todavía.
-    var total = state.movimientos.reduce(function(sum, m){ return sum + m.valor; }, 0);
+    // V2: siempre $0 porque no hay movimientos reales todavía (llegan en V3).
+    // La reducción ya está escrita pensando en los datos reales, para que
+    // V3 solo tenga que empujar objetos a state.movimientos.
+    var ingresos = state.movimientos.filter(function(m){ return m.valor > 0; })
+                                     .reduce(function(sum, m){ return sum + m.valor; }, 0);
+    var gastos = state.movimientos.filter(function(m){ return m.valor < 0; })
+                                   .reduce(function(sum, m){ return sum + Math.abs(m.valor); }, 0);
+    var total = ingresos - gastos;
+
     document.querySelector('[data-amount]').textContent = formatCOP(total);
+    document.querySelector('[data-income]').textContent = formatCOP(ingresos);
+    document.querySelector('[data-expense]').textContent = formatCOP(gastos);
   }
 
   function registerServiceWorker(){

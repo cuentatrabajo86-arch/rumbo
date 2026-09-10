@@ -1,6 +1,6 @@
 {
-  "name": "Brújula — Entiende tu dinero",
-  "short_name": "Brújula",
+  "name": "Rumbo — Entiende tu dinero",
+  "short_name": "Rumbo",
   "description": "Un asistente financiero personal: entiende tu dinero, reduce gastos y descubre cuánto puedes ahorrar.",
   "start_url": "./index.html",
   "scope": "./",
