@@ -3,7 +3,7 @@
 // El nombre de la caché sube de versión en cada release para que el
 // teléfono no se quede con el shell viejo (ver activate más abajo).
 
-const CACHE_NAME = 'rumbo-v5';
+const CACHE_NAME = 'rumbo-v10';
 const APP_SHELL = [
   './',
   './index.html',
