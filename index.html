@@ -9,7 +9,8 @@
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23C08A28'/%3E%3Ccircle cx='50' cy='50' r='30' fill='%23F5F6F8'/%3E%3Cpath d='M50 30 L58 50 L50 70 L42 50 Z' fill='%2314213D'/%3E%3C/svg%3E">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-512.png">
 
 <!-- Tipografía: Sora para interfaz, Fraunces para cifras grandes -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -969,8 +970,15 @@ ul{ list-style: none; margin: 0; padding: 0; }
       </div>
 
       <div class="quick-actions">
+        <button class="btn btn-secondary btn-block" id="btn-nuevo-ingreso-fijo">+ Ingreso fijo</button>
         <button class="btn btn-primary btn-block" id="btn-nueva-obligacion">+ Obligación</button>
       </div>
+
+      <div class="section-header" style="margin-top:20px;">
+        <span class="section-header__title">Ingresos fijos</span>
+      </div>
+      <p class="screen-subtitle" style="margin-top:-8px;">Lo que esperas recibir — regístralo como ingreso real cuando llegue</p>
+      <div id="ingresos-fijos-container"></div>
 
       <div class="section-header" style="margin-top:20px;">
         <span class="section-header__title">Tus obligaciones</span>
@@ -1080,9 +1088,45 @@ ul{ list-style: none; margin: 0; padding: 0; }
     <!-- ============ PERFIL ============ -->
     <section class="screen" id="screen-perfil" data-screen>
       <h1 class="screen-title">Perfil</h1>
+
       <div class="card">
-        <p class="empty-state__title">Iván</p>
-        <p class="empty-state__body">Aquí vas a poder ajustar tu cuenta, tu moneda y tus preferencias.</p>
+        <label class="field-label" for="perfil-input-nombre">Tu nombre</label>
+        <input type="text" id="perfil-input-nombre" class="text-input" placeholder="¿Cómo quieres que te saludemos?" autocomplete="off">
+        <p class="alert-text">Solo se usa para saludarte en Inicio. Se guarda únicamente en este teléfono.</p>
+      </div>
+
+      <div class="section-header" style="margin-top:20px;">
+        <span class="section-header__title">Usuarios en este dispositivo</span>
+      </div>
+      <div class="card">
+        <div id="perfiles-lista"></div>
+        <button type="button" class="btn btn-secondary btn-block" id="btn-nuevo-perfil" style="margin-top:12px;">+ Crear nuevo usuario</button>
+        <p class="alert-text">Cada usuario tiene su propia información — nadie ve los datos de otro usuario en este mismo teléfono. Ideal si vas a compartir tu teléfono o esta app con alguien más.</p>
+      </div>
+
+      <div class="section-header" style="margin-top:20px;">
+        <span class="section-header__title">Tus datos</span>
+      </div>
+      <div class="card">
+        <button type="button" class="btn btn-secondary btn-block" id="perfil-exportar">Descargar una copia de mis datos</button>
+        <p class="alert-text">Un archivo de respaldo que puedes guardar, o llevar a otro teléfono.</p>
+
+        <button type="button" class="btn btn-secondary btn-block" id="perfil-importar-btn" style="margin-top:16px;">Restaurar desde un archivo</button>
+        <input type="file" id="perfil-importar-input" accept="application/json" hidden>
+        <p class="alert-text">Reemplaza todo lo que tienes registrado ahora mismo por lo que traiga ese archivo (solo para el usuario activo).</p>
+
+        <button type="button" class="btn btn-danger btn-block" id="perfil-borrar" style="margin-top:16px;">Borrar todos mis datos</button>
+        <p class="alert-text">Deja este usuario como recién instalado — útil si vas a entregarle tu teléfono o esta app a otra persona. No se puede deshacer.</p>
+      </div>
+
+      <div class="section-header" style="margin-top:20px;">
+        <span class="section-header__title">Acerca de Rumbo</span>
+      </div>
+      <div class="card">
+        <p class="alert-text" style="margin-top:0; padding-top:0; border-top:none;">
+          Rumbo te ayuda a registrar lo que entra y sale de tu bolsillo, entender tus compromisos y deudas, y encontrar oportunidades concretas para conservar más dinero. Todo se calcula en este mismo teléfono — tus datos nunca salen de aquí.
+        </p>
+        <p class="alert-text">Esta aplicación fue desarrollada por Iván Jiménez, en busca de llevar el conteo de sus gastos personales.</p>
       </div>
     </section>
 
@@ -1411,6 +1455,48 @@ ul{ list-style: none; margin: 0; padding: 0; }
     </div>
   </div>
 
+  <!-- ============ HOJA DE INGRESO FIJO (recurrente) ============ -->
+  <div class="sheet-overlay" id="ingreso-fijo-sheet-overlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ingreso-fijo-sheet-title">
+      <div class="sheet__handle"></div>
+      <div class="sheet__header">
+        <h2 class="sheet__title" id="ingreso-fijo-sheet-title">Nuevo ingreso fijo</h2>
+        <button class="icon-btn" id="ingreso-fijo-sheet-close" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="sheet__body">
+        <label class="field-label" for="ingreso-fijo-input-nombre">¿Qué ingreso esperas recibir?</label>
+        <input type="text" id="ingreso-fijo-input-nombre" class="text-input" placeholder="Ej. Sueldo, Quincena, Arriendo que cobras" autocomplete="off">
+        <p class="field-error" id="ingreso-fijo-error-nombre" hidden>Escribe un nombre para este ingreso.</p>
+
+        <label class="field-label" for="ingreso-fijo-input-valor" style="margin-top:20px;">¿Cuánto es?</label>
+        <div class="amount-input">
+          <span class="amount-input__prefix">$</span>
+          <input type="text" inputmode="numeric" id="ingreso-fijo-input-valor" class="amount-input__field" placeholder="0" autocomplete="off">
+        </div>
+        <p class="field-error" id="ingreso-fijo-error-valor" hidden>Escribe un valor mayor que $0.</p>
+
+        <div class="field-label" style="margin-top:20px;">¿Cada cuánto?</div>
+        <div class="frequency-row" id="ingreso-fijo-frequency-row"></div>
+        <p class="field-error" id="ingreso-fijo-error-frecuencia" hidden>Elige cada cuánto lo recibes.</p>
+
+        <div class="field-label" style="margin-top:20px;">Origen</div>
+        <div class="category-grid" id="ingreso-fijo-category-grid"></div>
+        <p class="field-error" id="ingreso-fijo-error-categoria" hidden>Elige un origen.</p>
+
+        <label class="field-label" for="ingreso-fijo-input-fecha" style="margin-top:20px;">Próxima fecha esperada</label>
+        <input type="date" id="ingreso-fijo-input-fecha" class="text-input">
+      </div>
+
+      <div class="sheet__footer">
+        <button class="btn btn-danger" id="ingreso-fijo-sheet-delete" hidden>Eliminar</button>
+        <button class="btn btn-primary" id="ingreso-fijo-sheet-save">Guardar ingreso fijo</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ CONFIRMACIÓN DE BORRADO (V3/V4/V6/V7) ============ -->
   <div class="confirm-overlay" id="confirm-overlay" hidden>
     <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
@@ -1665,12 +1751,92 @@ ul{ list-style: none; margin: 0; padding: 0; }
      { id, nombre: string, objetivo: number, fechaObjetivo: 'YYYY-MM-DD'|'',
        principal: boolean,
        aportes: [ { id, valor: number (siempre positivo), tipo: 'aporte'|'retiro', fecha: 'YYYY-MM-DD' } ] } */
-  var STORAGE_KEY = 'rumbo:movimientos:v1';
-  var STORAGE_KEY_OBLIGACIONES = 'rumbo:obligaciones:v1';
-  var STORAGE_KEY_METAS = 'rumbo:metas:v1';
+  /* ============================================================
+     USUARIOS DE ESTE DISPOSITIVO (perfiles locales)
+     Permite que varias personas usen la misma instalación de Rumbo
+     sin ver los datos de las demás. El perfil "default" es el que
+     ya existía antes de esta función — usa exactamente las mismas
+     claves de siempre (rumbo:movimientos:v1, etc.), así que los
+     datos que ya tenías guardados siguen apareciendo tal cual, sin
+     ninguna migración. Los perfiles NUEVOS que se creen desde el
+     panel de Perfil usan claves propias, con su id de por medio, y
+     nunca se cruzan entre sí ni con el perfil default.
+     Nada de esto sale de este navegador/dispositivo: no hay cuentas
+     en la nube ni contraseñas — es solo una forma de separar datos
+     localmente. ============================================================ */
+  var PERFILES_KEY = 'rumbo:perfiles:v1';
+  var PERFIL_ACTIVO_KEY = 'rumbo:perfil-activo:v1';
+  var PERFIL_DEFAULT_ID = 'default';
+  var perfilActivoIdCache = null;
+
+  function obtenerPerfilActivoId(){
+    if (perfilActivoIdCache) return perfilActivoIdCache;
+    try{
+      perfilActivoIdCache = window.localStorage.getItem(PERFIL_ACTIVO_KEY) || PERFIL_DEFAULT_ID;
+    }catch(err){
+      perfilActivoIdCache = PERFIL_DEFAULT_ID;
+    }
+    return perfilActivoIdCache;
+  }
+
+  // Todas las funciones cargarX/guardarX de aquí en adelante usan esto
+  // en vez de una clave fija, para que cambiar de perfil cambie a qué
+  // datos apunta cada una sin tocar su lógica interna.
+  function claveAlmacen(nombreBase){
+    var perfil = obtenerPerfilActivoId();
+    if (perfil === PERFIL_DEFAULT_ID) return 'rumbo:' + nombreBase + ':v1';
+    return 'rumbo:perfil:' + perfil + ':' + nombreBase + ':v1';
+  }
+
+  function cargarPerfiles(){
+    try{
+      var raw = window.localStorage.getItem(PERFILES_KEY);
+      var lista = raw ? JSON.parse(raw) : null;
+      if (!Array.isArray(lista) || lista.length === 0) lista = [{ id: PERFIL_DEFAULT_ID, nombre: '' }];
+      return lista;
+    }catch(err){
+      return [{ id: PERFIL_DEFAULT_ID, nombre: '' }];
+    }
+  }
+
+  function guardarPerfiles(lista){
+    try{ window.localStorage.setItem(PERFILES_KEY, JSON.stringify(lista)); }catch(err){ /* no crítico */ }
+  }
+
+  function crearPerfil(nombre){
+    var lista = cargarPerfiles();
+    var nuevo = { id: 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nombre: nombre.trim() };
+    lista.push(nuevo);
+    guardarPerfiles(lista);
+    return nuevo;
+  }
+
+  function eliminarPerfil(id){
+    if (id === PERFIL_DEFAULT_ID || id === obtenerPerfilActivoId()) return; // no se borra el default ni el activo desde aquí
+    ['movimientos', 'obligaciones', 'metas', 'deudas', 'usuario', 'ingresosFijos'].forEach(function(base){
+      try{ window.localStorage.removeItem('rumbo:perfil:' + id + ':' + base + ':v1'); }catch(err){ /* no crítico */ }
+    });
+    guardarPerfiles(cargarPerfiles().filter(function(p){ return p.id !== id; }));
+  }
+
+  function cambiarPerfilActivo(id){
+    try{ window.localStorage.setItem(PERFIL_ACTIVO_KEY, id); }catch(err){ /* no crítico */ }
+    perfilActivoIdCache = id;
+
+    state.movimientos = cargarMovimientos();
+    state.obligaciones = cargarObligaciones();
+    state.metas = cargarMetas();
+    state.deudas = cargarDeudas();
+    state.ingresosFijos = cargarIngresosFijos();
+    state.usuario = cargarUsuario();
+
+    initGreeting();
+    refrescarTodo();
+    navigate('inicio');
+  }
 
   var state = {
-    usuario: { nombre: "Iván" },
+    usuario: { nombre: "" },
     movimientos: [],
     obligaciones: [],
     // Mes que se está viendo en Presupuesto ("YYYY-MM"); Inicio siempre
@@ -1680,12 +1846,15 @@ ul{ list-style: none; margin: 0; padding: 0; }
     ahorro: { disponibleEstimado: 0 },
     metas: [],
     // V7:
-    deudas: []
+    deudas: [],
+    // Ingresos recurrentes esperados (sueldo, quincena, arriendo que cobra, etc.).
+    // Igual que las obligaciones: solo informa, nunca crea un ingreso real por sí solo.
+    ingresosFijos: []
   };
 
   function cargarMovimientos(){
     try{
-      var raw = window.localStorage.getItem(STORAGE_KEY);
+      var raw = window.localStorage.getItem(claveAlmacen('movimientos'));
       var datos = raw ? JSON.parse(raw) : [];
       return sanearMovimientos(Array.isArray(datos) ? datos : []);
     }catch(err){
@@ -1711,7 +1880,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
 
   function guardarMovimientos(){
     try{
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.movimientos));
+      window.localStorage.setItem(claveAlmacen('movimientos'), JSON.stringify(state.movimientos));
       return true;
     }catch(err){
       console.warn('No se pudo guardar el movimiento en este dispositivo.', err);
@@ -1722,7 +1891,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
 
   function cargarObligaciones(){
     try{
-      var raw = window.localStorage.getItem(STORAGE_KEY_OBLIGACIONES);
+      var raw = window.localStorage.getItem(claveAlmacen('obligaciones'));
       var datos = raw ? JSON.parse(raw) : [];
       return sanearObligaciones(Array.isArray(datos) ? datos : []);
     }catch(err){
@@ -1745,7 +1914,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
 
   function guardarObligaciones(){
     try{
-      window.localStorage.setItem(STORAGE_KEY_OBLIGACIONES, JSON.stringify(state.obligaciones));
+      window.localStorage.setItem(claveAlmacen('obligaciones'), JSON.stringify(state.obligaciones));
       return true;
     }catch(err){
       console.warn('No se pudo guardar la obligación en este dispositivo.', err);
@@ -1754,9 +1923,51 @@ ul{ list-style: none; margin: 0; padding: 0; }
     }
   }
 
+  /* ---------- Ingresos fijos (recurrentes) ----------
+     Mismo patrón que las obligaciones, del lado de los ingresos:
+     { id, nombre, valor, frecuencia: 'mensual'|'quincenal'|'semanal',
+       categoria (una de CATEGORIAS.ingreso), fechaProximoPago }
+     Registrar un ingreso fijo NUNCA crea un movimiento de ingreso real
+     — es solo un recordatorio. El ingreso real se registra aparte
+     cuando efectivamente llega, igual que un gasto real frente a una
+     obligación. */
+  function cargarIngresosFijos(){
+    try{
+      var raw = window.localStorage.getItem(claveAlmacen('ingresosFijos'));
+      var datos = raw ? JSON.parse(raw) : [];
+      return sanearIngresosFijos(Array.isArray(datos) ? datos : []);
+    }catch(err){
+      console.warn('No se pudieron cargar los ingresos fijos guardados.', err);
+      return [];
+    }
+  }
+
+  function sanearIngresosFijos(lista){
+    var frecuencias = ['mensual', 'quincenal', 'semanal'];
+    return lista.filter(function(i){
+      return i && typeof i === 'object' && typeof i.id === 'string' &&
+        typeof i.nombre === 'string' && i.nombre.trim() !== '' &&
+        esNumeroValido(i.valor) && i.valor > 0 &&
+        frecuencias.indexOf(i.frecuencia) !== -1 &&
+        typeof i.categoria === 'string' &&
+        esFechaValida(i.fechaProximoPago);
+    });
+  }
+
+  function guardarIngresosFijos(){
+    try{
+      window.localStorage.setItem(claveAlmacen('ingresosFijos'), JSON.stringify(state.ingresosFijos));
+      return true;
+    }catch(err){
+      console.warn('No se pudo guardar el ingreso fijo en este dispositivo.', err);
+      mostrarToast('No se pudo guardar en este dispositivo');
+      return false;
+    }
+  }
+
   function cargarMetas(){
     try{
-      var raw = window.localStorage.getItem(STORAGE_KEY_METAS);
+      var raw = window.localStorage.getItem(claveAlmacen('metas'));
       var datos = raw ? JSON.parse(raw) : [];
       return sanearMetas(Array.isArray(datos) ? datos : []);
     }catch(err){
@@ -1786,7 +1997,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
 
   function guardarMetas(){
     try{
-      window.localStorage.setItem(STORAGE_KEY_METAS, JSON.stringify(state.metas));
+      window.localStorage.setItem(claveAlmacen('metas'), JSON.stringify(state.metas));
       return true;
     }catch(err){
       console.warn('No se pudo guardar la meta en este dispositivo.', err);
@@ -1806,11 +2017,10 @@ ul{ list-style: none; margin: 0; padding: 0; }
      Los pagos de deuda son una entidad propia, separada de
      `movimientos`: registrar un pago NUNCA crea un gasto en V3, para
      que el dinero no se cuente dos veces (ver auditoría de V8). */
-  var STORAGE_KEY_DEUDAS = 'rumbo:deudas:v1';
 
   function cargarDeudas(){
     try{
-      var raw = window.localStorage.getItem(STORAGE_KEY_DEUDAS);
+      var raw = window.localStorage.getItem(claveAlmacen('deudas'));
       var datos = raw ? JSON.parse(raw) : [];
       return sanearDeudas(Array.isArray(datos) ? datos : []);
     }catch(err){
@@ -1843,7 +2053,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
 
   function guardarDeudas(){
     try{
-      window.localStorage.setItem(STORAGE_KEY_DEUDAS, JSON.stringify(state.deudas));
+      window.localStorage.setItem(claveAlmacen('deudas'), JSON.stringify(state.deudas));
       return true;
     }catch(err){
       console.warn('No se pudo guardar la deuda en este dispositivo.', err);
@@ -1917,6 +2127,15 @@ ul{ list-style: none; margin: 0; padding: 0; }
       }
       var factor = EQUIVALENTE_MENSUAL[ob.frecuencia] || 1;
       return sum + (ob.valor * factor);
+    }, 0);
+  }
+
+  // Puramente informativo — nunca se suma al disponible ni al saldo
+  // real. Es lo que el usuario espera recibir, no dinero que ya tenga.
+  function totalIngresosFijosMensual(){
+    return state.ingresosFijos.reduce(function(sum, inf){
+      var factor = EQUIVALENTE_MENSUAL[inf.frecuencia] || 1;
+      return sum + (inf.valor * factor);
     }, 0);
   }
 
@@ -2444,7 +2663,9 @@ ul{ list-style: none; margin: 0; padding: 0; }
       dEls.conexion.hidden = true;
     }
 
-    // Historial de aportes/retiros, más reciente primero.
+    // Historial de aportes/retiros, más reciente primero. Cada uno se
+    // puede eliminar individualmente (un error de digitación no debe
+    // obligar a "compensarlo" con otro movimiento — sección de V11).
     dEls.historial.innerHTML = '';
     if (meta.aportes.length === 0){
       dEls.historial.innerHTML = '<p class="goal-card__falta">Todavía no has registrado ningún aporte.</p>';
@@ -2454,7 +2675,21 @@ ul{ list-style: none; margin: 0; padding: 0; }
         row.className = 'contribution-item';
         row.innerHTML =
           '<span class="contribution-item__fecha">' + formatFechaCorta(a.fecha) + '</span>' +
-          '<span class="contribution-item__valor--' + a.tipo + '">' + (a.tipo === 'retiro' ? '−' : '+') + formatCOP(a.valor) + '</span>';
+          '<span class="contribution-item__valor--' + a.tipo + '">' + (a.tipo === 'retiro' ? '−' : '+') + formatCOP(a.valor) + '</span>' +
+          '<span class="obligacion-item__delete" data-eliminar-aporte-id="' + a.id + '" role="button" aria-label="Eliminar este registro" tabindex="0">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-8 0l1 13a1 1 0 001 1h6a1 1 0 001-1l1-13"/></svg>' +
+          '</span>';
+        row.querySelector('[data-eliminar-aporte-id]').addEventListener('click', function(){
+          pedirConfirmacionAccion('¿Eliminar este registro del historial?', function(){
+            meta.aportes = meta.aportes.filter(function(x){ return x.id !== a.id; });
+            guardarMetas();
+            renderMetaDetalle();
+            renderMetas();
+            renderInicio();
+            renderAhorros();
+            mostrarToast('Registro eliminado');
+          });
+        });
         dEls.historial.appendChild(row);
       });
     }
@@ -2845,7 +3080,22 @@ ul{ list-style: none; margin: 0; padding: 0; }
           '<span class="payment-item__fecha">' + formatFechaCorta(p.fecha) +
             (p.interes > 0 ? '<span class="payment-item__desglose">' + formatCOP(p.capital) + ' capital + ' + formatCOP(p.interes) + ' interés</span>' : '') +
           '</span>' +
-          '<span class="payment-item__valor">' + formatCOP(p.valor) + '</span>';
+          '<span class="payment-item__valor">' + formatCOP(p.valor) + '</span>' +
+          '<span class="obligacion-item__delete" data-eliminar-pago-id="' + p.id + '" role="button" aria-label="Eliminar este pago" tabindex="0">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-8 0l1 13a1 1 0 001 1h6a1 1 0 001-1l1-13"/></svg>' +
+          '</span>';
+        row.querySelector('[data-eliminar-pago-id]').addEventListener('click', function(){
+          pedirConfirmacionAccion('¿Eliminar este pago del historial?', function(){
+            deuda.pagos = deuda.pagos.filter(function(x){ return x.id !== p.id; });
+            guardarDeudas();
+            renderDeudaDetalle();
+            renderDeudas();
+            renderPresupuesto();
+            renderInicio();
+            renderAhorros();
+            mostrarToast('Pago eliminado');
+          });
+        });
         yEls.historial.appendChild(row);
       });
     }
@@ -2983,10 +3233,34 @@ ul{ list-style: none; margin: 0; padding: 0; }
     navigate(initial);
   }
 
+  function cargarUsuario(){
+    try{
+      var raw = window.localStorage.getItem(claveAlmacen('usuario'));
+      var datos = raw ? JSON.parse(raw) : null;
+      var nombre = (datos && typeof datos.nombre === 'string') ? datos.nombre.trim() : '';
+      return { nombre: nombre };
+    }catch(err){
+      console.warn('No se pudo cargar el nombre guardado.', err);
+      return { nombre: '' };
+    }
+  }
+
+  function guardarUsuario(){
+    try{
+      window.localStorage.setItem(claveAlmacen('usuario'), JSON.stringify(state.usuario));
+      return true;
+    }catch(err){
+      console.warn('No se pudo guardar el nombre en este dispositivo.', err);
+      return false;
+    }
+  }
+
   function initGreeting(){
     var hora = new Date().getHours();
     var saludo = hora < 12 ? 'Buenos días' : (hora < 19 ? 'Buenas tardes' : 'Buenas noches');
-    document.getElementById('greeting').firstChild.textContent = saludo + ', ' + state.usuario.nombre;
+    document.getElementById('greeting').firstChild.textContent = state.usuario.nombre
+      ? saludo + ', ' + state.usuario.nombre
+      : saludo;
   }
 
   function registerServiceWorker(){
@@ -3222,6 +3496,60 @@ ul{ list-style: none; margin: 0; padding: 0; }
     return row;
   }
 
+  function crearFilaIngresoFijo(inf){
+    var cat = buscarCategoria('ingreso', inf.categoria);
+    var frec = buscarFrecuencia(inf.frecuencia);
+    var emoji = cat ? cat.emoji : '📦';
+    var catLabel = cat ? cat.label : 'Otros';
+    var frecLabel = frec ? frec.label : '';
+
+    var row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'obligacion-item';
+    row.innerHTML =
+      '<span class="obligacion-item__icon" aria-hidden="true" style="background:var(--income-soft);">' + emoji + '</span>' +
+      '<span class="obligacion-item__info">' +
+        '<span class="obligacion-item__desc">' + escapeHtml(inf.nombre) + '</span>' +
+        '<span class="obligacion-item__meta">' + escapeHtml(catLabel) + ' · ' + frecLabel + '</span>' +
+      '</span>' +
+      '<span class="obligacion-item__value" style="color:var(--income-text);">' + formatCOP(inf.valor) + '</span>' +
+      '<span class="obligacion-item__delete" data-delete-ingreso-fijo-id="' + inf.id + '" role="button" aria-label="Eliminar" tabindex="0">' +
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-8 0l1 13a1 1 0 001 1h6a1 1 0 001-1l1-13"/></svg>' +
+      '</span>';
+
+    row.addEventListener('click', function(e){
+      if (e.target.closest('[data-delete-ingreso-fijo-id]')) return;
+      abrirIngresoFijoParaEditar(inf.id);
+    });
+    row.querySelector('[data-delete-ingreso-fijo-id]').addEventListener('click', function(e){
+      e.stopPropagation();
+      pedirConfirmacionBorrado(inf.id, 'ingresoFijo');
+    });
+
+    return row;
+  }
+
+  function renderIngresosFijos(){
+    var contenedor = document.getElementById('ingresos-fijos-container');
+    if (state.ingresosFijos.length === 0){
+      contenedor.innerHTML =
+        '<div class="card"><div class="empty-state">' +
+          '<div class="empty-state__icon" style="background:var(--income-soft);">' +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--income)" stroke-width="1.8"><path d="M12 3v18M7 8a5 5 0 0110 0c0 3-5 3-5 6a5 5 0 0010 0"/></svg>' +
+          '</div>' +
+          '<p class="empty-state__title">Sin ingresos fijos registrados</p>' +
+          '<p class="empty-state__body">Si recibes un sueldo, quincena u otro ingreso recurrente, regístralo aquí para no perderle el rastro.</p>' +
+        '</div></div>';
+      return;
+    }
+
+    var card = document.createElement('div');
+    card.className = 'card';
+    state.ingresosFijos.forEach(function(inf){ card.appendChild(crearFilaIngresoFijo(inf)); });
+    contenedor.innerHTML = '';
+    contenedor.appendChild(card);
+  }
+
   function renderPresupuesto(){
     document.getElementById('periodo-label').textContent = formatPeriodoLabel(state.periodoActual);
 
@@ -3230,6 +3558,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
     var obligaciones = totalObligacionesDelPeriodo(state.periodoActual);
     var disponible = ingresos - obligaciones;
     var saldoReal = ingresos - gastos;
+    var ingresoFijoEsperado = totalIngresosFijosMensual();
 
     document.getElementById('resumen-ingresos').textContent = formatCOP(ingresos);
     document.getElementById('resumen-obligaciones').textContent = formatCOP(obligaciones);
@@ -3246,6 +3575,11 @@ ul{ list-style: none; margin: 0; padding: 0; }
           ? 'Después de tus obligaciones te quedarían aproximadamente ' + formatCOP(disponible) + '.'
           : 'Tus obligaciones superan tus ingresos registrados este mes en ' + formatCOP(Math.abs(disponible)) + '.');
     }
+    if (ingresoFijoEsperado > 0){
+      alerta.textContent += ' Además, esperas recibir aproximadamente ' + formatCOP(ingresoFijoEsperado) + ' al mes en ingresos fijos — recuerda registrarlos cuando lleguen.';
+    }
+
+    renderIngresosFijos();
 
     // Lista de obligaciones
     var contenedor = document.getElementById('obligaciones-container');
@@ -3507,6 +3841,191 @@ ul{ list-style: none; margin: 0; padding: 0; }
     oEls.save.addEventListener('click', protegerContraDobleClic(guardarObligacionDesdeSheet));
     oEls.delete.addEventListener('click', function(){
       if (obligacionEditId) pedirConfirmacionBorrado(obligacionEditId, 'obligacion');
+    });
+  }
+
+  /* ---------- Hoja de ingreso fijo (crear/editar) — calcada de obligaciones ---------- */
+  var ingresoFijoEditId = null;
+  var ingresoFijoFrecuenciaId = null;
+  var ingresoFijoCategoriaId = null;
+  var fEls = {};
+
+  function renderIngresoFijoFrequencyRow(){
+    fEls.frequencyRow.innerHTML = '';
+    FRECUENCIAS.filter(function(f){ return f.id !== 'unica'; }).forEach(function(f){
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'frequency-chip' + (f.id === ingresoFijoFrecuenciaId ? ' is-selected' : '');
+      chip.setAttribute('data-frecuencia-id', f.id);
+      chip.textContent = f.label;
+      chip.addEventListener('click', function(){
+        ingresoFijoFrecuenciaId = f.id;
+        fEls.errorFrecuencia.hidden = true;
+        Array.prototype.forEach.call(fEls.frequencyRow.children, function(c){
+          c.classList.toggle('is-selected', c.getAttribute('data-frecuencia-id') === f.id);
+        });
+      });
+      fEls.frequencyRow.appendChild(chip);
+    });
+  }
+
+  function renderIngresoFijoCategoryGrid(){
+    fEls.categoryGrid.innerHTML = '';
+    CATEGORIAS.ingreso.forEach(function(cat){
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'category-chip' + (cat.id === ingresoFijoCategoriaId ? ' is-selected' : '');
+      chip.setAttribute('data-categoria-id', cat.id);
+      chip.innerHTML = '<span class="category-chip__emoji" aria-hidden="true">' + cat.emoji + '</span><span>' + cat.label + '</span>';
+      chip.addEventListener('click', function(){
+        ingresoFijoCategoriaId = cat.id;
+        fEls.errorCategoria.hidden = true;
+        Array.prototype.forEach.call(fEls.categoryGrid.children, function(c){
+          c.classList.toggle('is-selected', c.getAttribute('data-categoria-id') === cat.id);
+        });
+      });
+      fEls.categoryGrid.appendChild(chip);
+    });
+  }
+
+  function abrirIngresoFijoSheet(){
+    fEls.overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(function(){ fEls.inputNombre.focus(); }, 50);
+  }
+
+  function cerrarIngresoFijoSheet(){
+    fEls.overlay.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function abrirIngresoFijoParaCrear(){
+    ingresoFijoEditId = null;
+    ingresoFijoFrecuenciaId = null;
+    ingresoFijoCategoriaId = null;
+
+    fEls.title.textContent = 'Nuevo ingreso fijo';
+    fEls.save.textContent = 'Guardar ingreso fijo';
+    fEls.delete.hidden = true;
+    fEls.inputNombre.value = '';
+    fEls.inputValor.value = '';
+    fEls.inputFecha.value = fechaHoyISO();
+    [fEls.errorNombre, fEls.errorValor, fEls.errorFrecuencia, fEls.errorCategoria].forEach(function(e){ e.hidden = true; });
+
+    renderIngresoFijoFrequencyRow();
+    renderIngresoFijoCategoryGrid();
+    abrirIngresoFijoSheet();
+  }
+
+  function abrirIngresoFijoParaEditar(id){
+    var inf = state.ingresosFijos.filter(function(i){ return i.id === id; })[0];
+    if (!inf) return;
+
+    ingresoFijoEditId = inf.id;
+    ingresoFijoFrecuenciaId = inf.frecuencia;
+    ingresoFijoCategoriaId = inf.categoria;
+
+    fEls.title.textContent = 'Editar ingreso fijo';
+    fEls.save.textContent = 'Guardar cambios';
+    fEls.delete.hidden = false;
+    fEls.inputNombre.value = inf.nombre;
+    fEls.inputValor.value = formatMiles(inf.valor);
+    fEls.inputFecha.value = inf.fechaProximoPago;
+    [fEls.errorNombre, fEls.errorValor, fEls.errorFrecuencia, fEls.errorCategoria].forEach(function(e){ e.hidden = true; });
+
+    renderIngresoFijoFrequencyRow();
+    renderIngresoFijoCategoryGrid();
+    abrirIngresoFijoSheet();
+  }
+
+  function ingresoFijoValorActual(){
+    var digitos = fEls.inputValor.value.replace(/[^\d]/g, '');
+    return digitos ? parseInt(digitos, 10) : 0;
+  }
+
+  function guardarIngresoFijoDesdeSheet(){
+    var nombre = fEls.inputNombre.value.trim();
+    var valor = ingresoFijoValorActual();
+    var valido = true;
+
+    fEls.errorNombre.hidden = !!nombre;
+    if (!nombre) valido = false;
+
+    fEls.errorValor.hidden = valor > 0;
+    if (!(valor > 0)) valido = false;
+
+    fEls.errorFrecuencia.hidden = !!ingresoFijoFrecuenciaId;
+    if (!ingresoFijoFrecuenciaId) valido = false;
+
+    fEls.errorCategoria.hidden = !!ingresoFijoCategoriaId;
+    if (!ingresoFijoCategoriaId) valido = false;
+
+    if (!valido) return;
+
+    var fechaProximoPago = fEls.inputFecha.value || fechaHoyISO();
+
+    if (ingresoFijoEditId){
+      var inf = state.ingresosFijos.filter(function(i){ return i.id === ingresoFijoEditId; })[0];
+      if (inf){
+        inf.nombre = nombre;
+        inf.valor = valor;
+        inf.frecuencia = ingresoFijoFrecuenciaId;
+        inf.categoria = ingresoFijoCategoriaId;
+        inf.fechaProximoPago = fechaProximoPago;
+      }
+    }else{
+      state.ingresosFijos.push({
+        id: generarId(),
+        nombre: nombre,
+        valor: valor,
+        frecuencia: ingresoFijoFrecuenciaId,
+        categoria: ingresoFijoCategoriaId,
+        fechaProximoPago: fechaProximoPago
+      });
+    }
+
+    guardarIngresosFijos();
+    renderPresupuesto();
+    cerrarIngresoFijoSheet();
+    mostrarToast(ingresoFijoEditId ? '✓ Ingreso fijo actualizado' : '✓ Ingreso fijo guardado');
+  }
+
+  function initIngresoFijoSheet(){
+    fEls = {
+      overlay: document.getElementById('ingreso-fijo-sheet-overlay'),
+      title: document.getElementById('ingreso-fijo-sheet-title'),
+      close: document.getElementById('ingreso-fijo-sheet-close'),
+      save: document.getElementById('ingreso-fijo-sheet-save'),
+      delete: document.getElementById('ingreso-fijo-sheet-delete'),
+      inputNombre: document.getElementById('ingreso-fijo-input-nombre'),
+      errorNombre: document.getElementById('ingreso-fijo-error-nombre'),
+      inputValor: document.getElementById('ingreso-fijo-input-valor'),
+      errorValor: document.getElementById('ingreso-fijo-error-valor'),
+      frequencyRow: document.getElementById('ingreso-fijo-frequency-row'),
+      errorFrecuencia: document.getElementById('ingreso-fijo-error-frecuencia'),
+      categoryGrid: document.getElementById('ingreso-fijo-category-grid'),
+      errorCategoria: document.getElementById('ingreso-fijo-error-categoria'),
+      inputFecha: document.getElementById('ingreso-fijo-input-fecha')
+    };
+
+    document.getElementById('btn-nuevo-ingreso-fijo').addEventListener('click', abrirIngresoFijoParaCrear);
+    fEls.close.addEventListener('click', cerrarIngresoFijoSheet);
+    fEls.overlay.addEventListener('click', function(e){
+      if (e.target === fEls.overlay) cerrarIngresoFijoSheet();
+    });
+
+    fEls.inputValor.addEventListener('input', function(){
+      var num = ingresoFijoValorActual();
+      fEls.inputValor.value = num ? formatMiles(num) : '';
+      if (num > 0) fEls.errorValor.hidden = true;
+    });
+    fEls.inputNombre.addEventListener('input', function(){
+      if (fEls.inputNombre.value.trim()) fEls.errorNombre.hidden = true;
+    });
+
+    fEls.save.addEventListener('click', protegerContraDobleClic(guardarIngresoFijoDesdeSheet));
+    fEls.delete.addEventListener('click', function(){
+      if (ingresoFijoEditId) pedirConfirmacionBorrado(ingresoFijoEditId, 'ingresoFijo');
     });
   }
 
@@ -3925,6 +4444,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
   /* ---------- 8. CONFIRMACIÓN DE BORRADO + TOAST ---------- */
   var idPendienteDeBorrar = null;
   var tipoPendienteDeBorrar = 'movimiento'; // 'movimiento' | 'obligacion'
+  var accionPendienteDeConfirmar = null; // usado por acciones genéricas (borrar todo, restaurar respaldo)
 
   function pedirConfirmacionBorrado(id, tipo){
     idPendienteDeBorrar = id;
@@ -3933,18 +4453,36 @@ ul{ list-style: none; margin: 0; padding: 0; }
       obligacion: '¿Eliminar esta obligación?',
       meta: '¿Quieres eliminar esta meta?',
       deuda: '¿Eliminar esta deuda?',
+      ingresoFijo: '¿Eliminar este ingreso fijo?',
       movimiento: '¿Eliminar este movimiento?'
     };
     document.getElementById('confirm-title').textContent = textos[tipoPendienteDeBorrar] || textos.movimiento;
     document.getElementById('confirm-overlay').hidden = false;
   }
 
+  // Para acciones que no son "borrar un registro por id" (borrar todo,
+  // reemplazar con un respaldo). Reutiliza el mismo diálogo visual.
+  function pedirConfirmacionAccion(titulo, accion){
+    accionPendienteDeConfirmar = accion;
+    document.getElementById('confirm-title').textContent = titulo;
+    document.getElementById('confirm-overlay').hidden = false;
+  }
+
   function cerrarConfirmacion(){
     idPendienteDeBorrar = null;
+    accionPendienteDeConfirmar = null;
     document.getElementById('confirm-overlay').hidden = true;
   }
 
   function ejecutarBorrado(){
+    if (accionPendienteDeConfirmar){
+      var accion = accionPendienteDeConfirmar;
+      accionPendienteDeConfirmar = null;
+      document.getElementById('confirm-overlay').hidden = true;
+      accion();
+      return;
+    }
+
     if (!idPendienteDeBorrar) return;
 
     if (tipoPendienteDeBorrar === 'obligacion'){
@@ -3975,6 +4513,13 @@ ul{ list-style: none; margin: 0; padding: 0; }
       renderInicio();
       renderAhorros();
       mostrarToast('Deuda eliminada');
+    }else if (tipoPendienteDeBorrar === 'ingresoFijo'){
+      state.ingresosFijos = state.ingresosFijos.filter(function(i){ return i.id !== idPendienteDeBorrar; });
+      guardarIngresosFijos();
+      cerrarConfirmacion();
+      cerrarIngresoFijoSheet();
+      renderPresupuesto();
+      mostrarToast('Ingreso fijo eliminado');
     }else{
       state.movimientos = state.movimientos.filter(function(m){ return m.id !== idPendienteDeBorrar; });
       guardarMovimientos();
@@ -3996,6 +4541,238 @@ ul{ list-style: none; margin: 0; padding: 0; }
     });
   }
 
+  /* ============================================================
+     PERFIL — nombre, respaldo (exportar/importar) y borrado total.
+     Todo vive solo en este dispositivo; nada se envía a internet.
+     Diseñado también para que Rumbo se pueda entregar limpio a otra
+     persona: los archivos del proyecto nunca contienen datos reales,
+     solo lo que el propio localStorage del dispositivo haya guardado.
+     ============================================================ */
+
+  function crearFilaPerfil(perfil){
+    var esActivo = perfil.id === obtenerPerfilActivoId();
+    var puedeEliminar = !esActivo && perfil.id !== PERFIL_DEFAULT_ID;
+    var nombreMostrado = esActivo ? state.usuario.nombre : perfil.nombre;
+
+    var row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'obligacion-item';
+    row.disabled = esActivo;
+    row.innerHTML =
+      '<span class="obligacion-item__icon" aria-hidden="true" style="background:' + (esActivo ? 'var(--brand-soft)' : 'var(--paper)') + ';">' + (esActivo ? '👤' : '👥') + '</span>' +
+      '<span class="obligacion-item__info">' +
+        '<span class="obligacion-item__desc">' + escapeHtml(nombreMostrado || 'Sin nombre todavía') + '</span>' +
+        '<span class="obligacion-item__meta">' + (esActivo ? 'Usando ahora' : 'Toca para cambiar a este usuario') + '</span>' +
+      '</span>' +
+      (puedeEliminar
+        ? '<span class="obligacion-item__delete" data-eliminar-perfil-id="' + perfil.id + '" role="button" aria-label="Eliminar usuario" tabindex="0">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-8 0l1 13a1 1 0 001 1h6a1 1 0 001-1l1-13"/></svg>' +
+          '</span>'
+        : '');
+
+    if (!esActivo){
+      row.addEventListener('click', function(e){
+        if (e.target.closest('[data-eliminar-perfil-id]')) return;
+        cambiarPerfilActivo(perfil.id);
+        mostrarToast('Ahora estás usando: ' + (perfil.nombre || 'este usuario'));
+      });
+    }
+    if (puedeEliminar){
+      row.querySelector('[data-eliminar-perfil-id]').addEventListener('click', function(e){
+        e.stopPropagation();
+        pedirConfirmacionAccion('¿Eliminar este usuario y toda su información?', function(){
+          eliminarPerfil(perfil.id);
+          renderListaPerfiles();
+          mostrarToast('Usuario eliminado');
+        });
+      });
+    }
+
+    return row;
+  }
+
+  function renderListaPerfiles(){
+    var lista = document.getElementById('perfiles-lista');
+    var perfiles = cargarPerfiles();
+    var activoId = obtenerPerfilActivoId();
+    var entradaActiva = perfiles.filter(function(p){ return p.id === activoId; })[0];
+    if (entradaActiva){
+      if (entradaActiva.nombre !== state.usuario.nombre){
+        entradaActiva.nombre = state.usuario.nombre;
+        guardarPerfiles(perfiles);
+      }
+    }else{
+      perfiles.push({ id: activoId, nombre: state.usuario.nombre });
+      guardarPerfiles(perfiles);
+    }
+    lista.innerHTML = '';
+    perfiles.forEach(function(p){ lista.appendChild(crearFilaPerfil(p)); });
+  }
+
+  function renderPerfil(){
+    var input = document.getElementById('perfil-input-nombre');
+    if (document.activeElement !== input) input.value = state.usuario.nombre || '';
+    renderListaPerfiles();
+  }
+
+  function refrescarTodo(){
+    renderInicio();
+    renderMovimientos();
+    renderPresupuesto();
+    renderAhorros();
+    renderMetas();
+    renderDeudas();
+    renderPerfil();
+  }
+
+  function exportarDatos(){
+    var payload = {
+      app: 'rumbo',
+      formato: 1,
+      exportadoEn: fechaHoyISO(),
+      usuario: state.usuario,
+      movimientos: state.movimientos,
+      obligaciones: state.obligaciones,
+      ingresosFijos: state.ingresosFijos,
+      metas: state.metas,
+      deudas: state.deudas
+    };
+
+    try{
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'rumbo-respaldo-' + fechaHoyISO() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      mostrarToast('Respaldo descargado');
+    }catch(err){
+      console.warn('No se pudo generar el respaldo.', err);
+      mostrarToast('No se pudo generar el respaldo');
+    }
+  }
+
+  function aplicarDatosImportados(datos){
+    state.usuario = { nombre: (datos.usuario && typeof datos.usuario.nombre === 'string') ? datos.usuario.nombre.trim() : '' };
+    state.movimientos = sanearMovimientos(Array.isArray(datos.movimientos) ? datos.movimientos : []);
+    state.obligaciones = sanearObligaciones(Array.isArray(datos.obligaciones) ? datos.obligaciones : []);
+    state.ingresosFijos = sanearIngresosFijos(Array.isArray(datos.ingresosFijos) ? datos.ingresosFijos : []);
+    state.metas = sanearMetas(Array.isArray(datos.metas) ? datos.metas : []);
+    state.deudas = sanearDeudas(Array.isArray(datos.deudas) ? datos.deudas : []);
+
+    guardarUsuario();
+    guardarMovimientos();
+    guardarObligaciones();
+    guardarIngresosFijos();
+    guardarMetas();
+    guardarDeudas();
+
+    initGreeting();
+    refrescarTodo();
+    navigate('inicio');
+    mostrarToast('Datos restaurados');
+  }
+
+  function manejarArchivoImportado(file){
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var datos;
+      try{
+        datos = JSON.parse(reader.result);
+      }catch(err){
+        mostrarToast('Ese archivo no se pudo leer');
+        return;
+      }
+      if (!datos || typeof datos !== 'object'){
+        mostrarToast('Ese archivo no tiene el formato esperado');
+        return;
+      }
+      pedirConfirmacionAccion('¿Reemplazar todos tus datos actuales?', function(){
+        aplicarDatosImportados(datos);
+      });
+    };
+    reader.onerror = function(){ mostrarToast('No se pudo leer el archivo'); };
+    reader.readAsText(file);
+  }
+
+  function borrarTodosLosDatos(){
+    try{
+      window.localStorage.removeItem(claveAlmacen('movimientos'));
+      window.localStorage.removeItem(claveAlmacen('obligaciones'));
+      window.localStorage.removeItem(claveAlmacen('ingresosFijos'));
+      window.localStorage.removeItem(claveAlmacen('metas'));
+      window.localStorage.removeItem(claveAlmacen('deudas'));
+      window.localStorage.removeItem(claveAlmacen('usuario'));
+    }catch(err){
+      console.warn('No se pudieron borrar todos los datos.', err);
+    }
+
+    state.movimientos = [];
+    state.obligaciones = [];
+    state.ingresosFijos = [];
+    state.metas = [];
+    state.deudas = [];
+    state.usuario = { nombre: '' };
+
+    initGreeting();
+    refrescarTodo();
+    navigate('inicio');
+    mostrarToast('Tus datos fueron borrados');
+  }
+
+  function initPerfil(){
+    var inputNombre = document.getElementById('perfil-input-nombre');
+    inputNombre.value = state.usuario.nombre || '';
+    inputNombre.addEventListener('change', function(){
+      state.usuario.nombre = inputNombre.value.trim();
+      guardarUsuario();
+      initGreeting();
+
+      // Mantener sincronizado el nombre que se ve en el panel de usuarios.
+      var activoId = obtenerPerfilActivoId();
+      var lista = cargarPerfiles();
+      var entrada = lista.filter(function(p){ return p.id === activoId; })[0];
+      if (entrada){
+        entrada.nombre = state.usuario.nombre;
+      }else{
+        lista.push({ id: activoId, nombre: state.usuario.nombre });
+      }
+      guardarPerfiles(lista);
+      renderListaPerfiles();
+    });
+
+    document.getElementById('perfil-exportar').addEventListener('click', exportarDatos);
+
+    var inputArchivo = document.getElementById('perfil-importar-input');
+    document.getElementById('perfil-importar-btn').addEventListener('click', function(){
+      inputArchivo.click();
+    });
+    inputArchivo.addEventListener('change', function(){
+      var file = inputArchivo.files && inputArchivo.files[0];
+      manejarArchivoImportado(file);
+      inputArchivo.value = ''; // permite volver a elegir el mismo archivo si hace falta
+    });
+
+    document.getElementById('perfil-borrar').addEventListener('click', function(){
+      pedirConfirmacionAccion('¿Borrar todos tus datos de Rumbo?', borrarTodosLosDatos);
+    });
+
+    document.getElementById('btn-nuevo-perfil').addEventListener('click', function(){
+      var nuevo = crearPerfil('Nuevo usuario');
+      cambiarPerfilActivo(nuevo.id);
+      mostrarToast('Usuario nuevo creado — ya puedes ponerle un nombre');
+      setTimeout(function(){
+        var input = document.getElementById('perfil-input-nombre');
+        input.focus();
+        input.select();
+      }, 150);
+    });
+  }
+
   var toastTimer = null;
   function mostrarToast(mensaje){
     var toast = document.getElementById('toast');
@@ -4011,6 +4788,8 @@ ul{ list-style: none; margin: 0; padding: 0; }
     state.obligaciones = cargarObligaciones();
     state.metas = cargarMetas();
     state.deudas = cargarDeudas();
+    state.ingresosFijos = cargarIngresosFijos();
+    state.usuario = cargarUsuario();
 
     initGreeting();
     initRouter();
@@ -4019,18 +4798,21 @@ ul{ list-style: none; margin: 0; padding: 0; }
     initConfirmacion();
     initPeriodo();
     initObligacionSheet();
+    initIngresoFijoSheet();
     initDetalleOportunidad();
     initInsightInicio();
     initMetaSheet();
     initMetaDetalle();
     initDeudaSheet();
     initDeudaDetalle();
+    initPerfil();
     renderInicio();
     renderMovimientos();
     renderPresupuesto();
     renderAhorros();
     renderMetas();
     renderDeudas();
+    renderPerfil();
     registerServiceWorker();
   });
 
