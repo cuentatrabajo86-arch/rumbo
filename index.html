@@ -1829,6 +1829,7 @@ ul{ list-style: none; margin: 0; padding: 0; }
     state.deudas = cargarDeudas();
     state.ingresosFijos = cargarIngresosFijos();
     state.usuario = cargarUsuario();
+    state.periodoActual = claveMes(fechaHoyISO()); // volver al mes actual, no heredar el que se estaba viendo
 
     initGreeting();
     refrescarTodo();
