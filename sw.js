@@ -1,9 +1,11 @@
-// Service worker — solo cachea el "shell" de la app.
-// V9 (seguridad/rendimiento/persistencia) ampliará esta estrategia.
-// El nombre de la caché sube de versión en cada release para que el
-// teléfono no se quede con el shell viejo (ver activate más abajo).
+// Service worker — cachea el "shell" de la app para que funcione offline,
+// pero SIEMPRE prioriza traer la versión más reciente cuando hay internet.
+// (Antes priorizaba la copia guardada, lo que podía dejar una pestaña
+// mostrando una versión vieja de Rumbo si nunca se cerraba del todo.)
+// El nombre de la caché sube de versión en cada release para limpiar
+// cachés viejas al activar (ver "activate" más abajo).
 
-const CACHE_NAME = 'rumbo-v11';
+const CACHE_NAME = 'rumbo-v13';
 const APP_SHELL = [
   './',
   './index.html',
@@ -37,8 +39,17 @@ self.addEventListener('activate', function(event){
 
 self.addEventListener('fetch', function(event){
   event.respondWith(
-    caches.match(event.request).then(function(cached){
-      return cached || fetch(event.request);
+    fetch(event.request).then(function(respuestaDeRed){
+      // Hay internet: usar la versión fresca y guardarla para la próxima
+      // vez que no haya conexión.
+      var copiaParaGuardar = respuestaDeRed.clone();
+      caches.open(CACHE_NAME).then(function(cache){
+        cache.put(event.request, copiaParaGuardar);
+      });
+      return respuestaDeRed;
+    }).catch(function(){
+      // Sin internet: usar lo último que se guardó.
+      return caches.match(event.request);
     })
   );
 });

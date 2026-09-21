@@ -1127,8 +1127,12 @@ ul{ list-style: none; margin: 0; padding: 0; }
           Rumbo te ayuda a registrar lo que entra y sale de tu bolsillo, entender tus compromisos y deudas, y encontrar oportunidades concretas para conservar más dinero. Todo se calcula en este mismo teléfono — tus datos nunca salen de aquí.
         </p>
         <p class="alert-text">Esta aplicación fue desarrollada por Iván Jiménez, en busca de llevar el conteo de sus gastos personales.</p>
+        <p class="alert-text" id="perfil-version">Versión 13</p>
+        <button type="button" class="btn btn-secondary btn-block" id="perfil-buscar-actualizacion" style="margin-top:12px;">Buscar actualizaciones</button>
+        <p class="alert-text">Si acabas de recibir una versión nueva y aquí sigue saliendo la anterior, toca este botón — no hace falta ningún truco con el link.</p>
       </div>
     </section>
+
 
   </main>
 
@@ -3265,9 +3269,35 @@ ul{ list-style: none; margin: 0; padding: 0; }
   }
 
   function registerServiceWorker(){
-    if ('serviceWorker' in navigator){
-      navigator.serviceWorker.register('sw.js').catch(function(){ /* silencioso */ });
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.register('sw.js').catch(function(){ /* silencioso */ });
+
+    // Cuando el service worker nuevo toma el control (tras "Buscar
+    // actualizaciones" o una visita normal), recargar una sola vez para
+    // que la pantalla muestre la versión nueva sin que el usuario tenga
+    // que hacer ningún truco con el link.
+    var yaRecargando = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if (yaRecargando) return;
+      yaRecargando = true;
+      window.location.reload();
+    });
+  }
+
+  function buscarActualizacionAhora(){
+    if (!('serviceWorker' in navigator)){
+      mostrarToast('Tu navegador no soporta esto');
+      return;
     }
+    navigator.serviceWorker.getRegistration().then(function(reg){
+      if (!reg){
+        mostrarToast('No se pudo verificar todavía — intenta de nuevo en un momento');
+        return;
+      }
+      mostrarToast('Buscando actualizaciones…');
+      reg.update();
+    });
   }
 
   /* ---------- 5. INICIO — RESUMEN Y RECIENTES ---------- */
@@ -4772,6 +4802,8 @@ ul{ list-style: none; margin: 0; padding: 0; }
         input.select();
       }, 150);
     });
+
+    document.getElementById('perfil-buscar-actualizacion').addEventListener('click', buscarActualizacionAhora);
   }
 
   var toastTimer = null;
